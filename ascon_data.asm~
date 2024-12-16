@@ -1,0 +1,6 @@
+ADATA	ld	a,(ALEN)
+	ld	c,a
+	ld	hl,S
+	ld	de,ASSOC
+	ld	b,8
+ADATAL		

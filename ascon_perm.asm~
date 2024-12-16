@@ -1,0 +1,96 @@
+PERMUT	ld	b,a		; Core permutation. Rounds in A
+ROUND	ld	hl,S+23		; Constant in C 0xF0 or 0xB4
+	ld	a,c		; Add round constant to S[2]
+	xor	a,(hl)
+	ld	(hl),a
+	ld	a,c
+	sub	15
+	ld	c,a
+	;;
+	push	bc
+	call	SUBSTIT		; Substitution layer
+	;; 
+	pop	bc
+	djnz	ROUND
+	ret
+	;;
+ROTR1	push	hl
+	srl	(hl)
+	inc	hl
+	ld	b,7
+R1LOOP	rr	(hl)
+	inc	hl
+	djnz	R1LOOP
+	pop	hl
+	jr	NC,R1OUT
+	ld	a,80
+	add	a,(hl)
+	ld	(hl),a
+R1OUT	ret
+	;; 
+SUBSTIT	ld	hl,S
+	ld	de,S+32
+	call	XORSTA
+	ld	hl,S+32
+	ld	de,S+24
+	call	XORSTA
+	ld	hl,S+16
+	ld	de,S+8
+	call	XORSTA
+	ld	ix,TSTORE	; Compute T
+	ld	de,S
+	ld	hl,S+8
+	call	TSUBST
+	call	TSUBST
+	call	TSUBST
+	call	TSUBST
+	ld	hl,S
+	call	TSUBST
+	;;
+	ld	hl,S
+	ld	de,TSTORE+8
+	call	XORSTA
+	call	XORSTA
+	call	XORSTA
+	call	XORSTA
+	ld	de,TSTORE
+	call	XORSTA
+	;;
+	ld	hl,S+8
+	ld	de,S
+	call	XORSTA
+	ld	hl,S
+	ld	de,S+32
+	call	XORSTA
+	ld	hl,S+24
+	ld	de,S+16
+	call	XORSTA
+	ld	b,8
+	ld	hl,S+16
+FFLOOP	ld	a,(hl)
+	xor	a,0xFF
+	ld	(hl),a
+	inc	hl
+	djnz FFLOOP
+	ret
+	;; 
+XORSTA	ld	b,8		; S[hl] ^= S[de]
+XORLOOP	ld	a,(de)
+	xor	a,(hl)
+	ld	(hl),a
+	inc	de
+	inc	hl
+	djnz	XORLOOP
+	ret
+	;; 
+TSUBST	ld	b,8		; T[i] = S[i]^FF & S[i+1%5]
+TSLOOP	ld	a,(de)
+	xor	a,0xFF
+	and	a,(hl)
+	ld	(ix),a
+	inc	ix
+	inc	de
+	inc	hl
+	djnz	TSLOOP
+	ret
+	;; 

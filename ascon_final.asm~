@@ -1,0 +1,11 @@
+FINALZ	ld	hl,S+16		; Finalization
+	ld	de,KEY		; Update S[2], S[3]
+	ld	b,16
+FINLOOP	ld	a,(de)
+	xor	a,(hl)
+	ld	(hl),a
+	;;
+	ld	a,12		; 12-round permutation
+	ld	c,0xF0
+	call	PERMUT
+	

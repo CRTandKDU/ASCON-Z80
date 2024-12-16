@@ -1,0 +1,1286 @@
+binary-debuggable-source
+0000 0000 f ascon8.asm
+7000 7000 s 	org 	7000H
+7000 7000 d cdc901
+7000 7000 u 03 01
+7000 7000 s START	call 	01c9H
+7003 7003 d af
+7003 7003 u 01 01
+7003 7003 s 	xor	a
+7004 7004 d 329c40
+7004 7004 u 03 01
+7004 7004 s 	ld	(409cH),a
+7007 7007 d 21d172
+7007 7007 u 03 01
+7007 7007 s 	ld	hl, MSG
+700a 700a d cd0a2f
+700a 700a u 03 01
+700a 700a s 	call	2f0aH
+700d 700d s 	;; 
+700d 700d d cda570
+700d 700d u 03 01
+700d 700d s 	call	INITV		; Set up init value
+7010 7010 d cd5570
+7010 7010 u 03 01
+7010 7010 s 	call	OUTSTA
+7013 7013 d 3e0c
+7013 7013 u 02 01
+7013 7013 s 	ld	a,12
+7015 7015 d 0ef0
+7015 7015 u 02 01
+7015 7015 s 	ld	c,0xF0		; Round constant init for 12
+7017 7017 d cdf870
+7017 7017 u 03 01
+7017 7017 s 	call	PERMUT		; Perform A rounds
+701a 701a d cde870
+701a 701a u 03 01
+701a 701a s 	call	POSTINI		; Terminate initialization
+701d 701d s 	;;
+701d 701d d cd3272
+701d 701d u 03 01
+701d 701d s 	call	ADATA		; Process associated data
+7020 7020 s 	;;
+7020 7020 d cd5e72
+7020 7020 u 03 01
+7020 7020 s 	call	PLTEXT		; Process plain text
+7023 7023 s 	;; 
+7023 7023 d cd8272
+7023 7023 u 03 01
+7023 7023 s 	call	FINALZ		; Finalization
+7026 7026 s 	;; 
+7026 7026 d 3e0d
+7026 7026 u 02 01
+7026 7026 s 	ld	a,0x0D
+7028 7028 d cd3300
+7028 7028 u 03 01
+7028 7028 s 	call	0033H
+702b 702b d 3e0d
+702b 702b u 02 01
+702b 702b s 	ld	a,0x0D
+702d 702d d cd3300
+702d 702d u 03 01
+702d 702d s 	call	0033H
+7030 7030 d cd5070
+7030 7030 u 03 01
+7030 7030 s 	call	OUTCIT		; Print ciphertext
+7033 7033 d 3e0d
+7033 7033 u 02 01
+7033 7033 s 	ld	a,0x0D
+7035 7035 d cd3300
+7035 7035 u 03 01
+7035 7035 s 	call	0033H
+7038 7038 d cd5570
+7038 7038 u 03 01
+7038 7038 s 	call	OUTSTA		; Print state
+703b 703b d 3e0d
+703b 703b u 02 01
+703b 703b s 	ld	a,0x0D
+703d 703d d cd3300
+703d 703d u 03 01
+703d 703d s 	call	0033H
+7040 7040 d cd4b70
+7040 7040 u 03 01
+7040 7040 s 	call	OUTTAG		; Print tag
+7043 7043 d 3e0d
+7043 7043 u 02 01
+7043 7043 s 	ld	a,0x0D
+7045 7045 d cd3300
+7045 7045 u 03 01
+7045 7045 s 	call	0033H
+7048 7048 s 	;;
+7048 7048 s 	;; 
+7048 7048 d c3cc06
+7048 7048 u 03 01
+7048 7048 s 	jp	06ccH		; Jump to BASIC
+704b 704b s 	;;
+704b 704b s include ascon_out.asm
+704b 704b f ascon_out.asm
+704b 704b d 118373
+704b 704b u 03 01
+704b 704b s OUTTAG	ld	de,TAG
+704e 704e d 1811
+704e 704e u 02 01
+704e 704e s 	jr	SHCUT
+7050 7050 s 	;; 
+7050 7050 d 117373
+7050 7050 u 03 01
+7050 7050 s OUTCIT	ld	de,CIPHER
+7053 7053 d 180c
+7053 7053 u 02 01
+7053 7053 s 	jr	SHCUT
+7055 7055 s 	;; 
+7055 7055 d 11dc72
+7055 7055 u 03 01
+7055 7055 s OUTSTA	ld	de,S		; Print 5x64 bits state
+7058 7058 d cd6870
+7058 7058 u 03 01
+7058 7058 s 	call	OUTLN
+705b 705b d cd6870
+705b 705b u 03 01
+705b 705b s 	call	OUTLN
+705e 705e d cd6870
+705e 705e u 03 01
+705e 705e s 	call	OUTLN
+7061 7061 d cd6870
+7061 7061 u 03 01
+7061 7061 s SHCUT	call	OUTLN
+7064 7064 d cd6870
+7064 7064 u 03 01
+7064 7064 s 	call	OUTLN
+7067 7067 d c9
+7067 7067 u 01 01
+7067 7067 s 	ret
+7068 7068 d 0604
+7068 7068 u 02 01
+7068 7068 s OUTLN	ld	b,4		; Print 1x64 bits line
+706a 706a d 1a
+706a 706a u 01 01
+706a 706a s OUTW	ld	a,(de)		; Print 2 bytes
+706b 706b d 67
+706b 706b u 01 01
+706b 706b s 	ld	h,a
+706c 706c d 13
+706c 706c u 01 01
+706c 706c s 	inc	de
+706d 706d d 1a
+706d 706d u 01 01
+706d 706d s 	ld	a,(de)
+706e 706e d 6f
+706e 706e u 01 01
+706e 706e s 	ld	l,a
+706f 706f d 13
+706f 706f u 01 01
+706f 706f s 	inc 	de
+7070 7070 d cd8070
+7070 7070 u 03 01
+7070 7070 s 	call	OUTHEX
+7073 7073 d 3e20
+7073 7073 u 02 01
+7073 7073 s 	ld	a,0x20
+7075 7075 d cd3a03
+7075 7075 u 03 01
+7075 7075 s 	call	033AH
+7078 7078 d 10f0
+7078 7078 u 02 01
+7078 7078 s 	djnz	OUTW
+707a 707a d 3e0d
+707a 707a u 02 01
+707a 707a s 	ld	a,0x0D
+707c 707c d cd3a03
+707c 707c u 03 01
+707c 707c s 	call	033AH
+707f 707f d c9
+707f 707f u 01 01
+707f 707f s 	ret
+7080 7080 s 	;; 
+7080 7080 d 4c
+7080 7080 u 01 01
+7080 7080 s OUTHEX	ld	c,h		; Print HL in hex
+7081 7081 d cd8e70
+7081 7081 u 03 01
+7081 7081 s 	call	OUTH8
+7084 7084 d 3e20
+7084 7084 u 02 01
+7084 7084 s 	ld	a,0x20
+7086 7086 d cd3a03
+7086 7086 u 03 01
+7086 7086 s 	call	033AH
+7089 7089 d 4d
+7089 7089 u 01 01
+7089 7089 s 	ld 	c,l
+708a 708a d cd8e70
+708a 708a u 03 01
+708a 708a s 	call	OUTH8
+708d 708d d c9
+708d 708d u 01 01
+708d 708d s 	ret
+708e 708e d 79
+708e 708e u 01 01
+708e 708e s OUTH8	ld	a,c		; Print C in hex
+708f 708f d e6f0
+708f 708f u 02 01
+708f 708f s 	and	a,0xF0
+7091 7091 d 0f
+7091 7091 u 01 01
+7091 7091 s 	rrca
+7092 7092 d 0f
+7092 7092 u 01 01
+7092 7092 s 	rrca
+7093 7093 d 0f
+7093 7093 u 01 01
+7093 7093 s 	rrca
+7094 7094 d 0f
+7094 7094 u 01 01
+7094 7094 s 	rrca
+7095 7095 d cd9b70
+7095 7095 u 03 01
+7095 7095 s 	call	CONV8
+7098 7098 d 79
+7098 7098 u 01 01
+7098 7098 s 	ld	a,c
+7099 7099 d e60f
+7099 7099 u 02 01
+7099 7099 s 	and	0x0F
+709b 709b d b7
+709b 709b u 01 01
+709b 709b s CONV8	or	a
+709c 709c d 27
+709c 709c u 01 01
+709c 709c s 	daa
+709d 709d d c6f0
+709d 709d u 02 01
+709d 709d s 	add	a,0xF0
+709f 709f d ce40
+709f 709f u 02 01
+709f 709f s 	adc	a,0x40
+70a1 70a1 d cd3a03
+70a1 70a1 u 03 01
+70a1 70a1 s 	call	033AH
+70a4 70a4 d c9
+70a4 70a4 u 01 01
+70a4 70a4 s 	ret
+70a5 70a5 s 	
+70a5 70a5 f ascon8.asm
+70a5 70a5 s include ascon_init.asm	
+70a5 70a5 f ascon_init.asm
+70a5 70a5 d 21dc72
+70a5 70a5 u 03 01
+70a5 70a5 s INITV	ld	hl,S		; Init vector
+70a8 70a8 d af
+70a8 70a8 u 01 01
+70a8 70a8 s 	xor	a
+70a9 70a9 d 77
+70a9 70a9 u 01 01
+70a9 70a9 s 	ld	(hl),a		; 0x00
+70aa 70aa d 23
+70aa 70aa u 01 01
+70aa 70aa s 	inc	hl
+70ab 70ab d 77
+70ab 70ab u 01 01
+70ab 70ab s 	ld	(hl),a		; 0x00
+70ac 70ac d 23
+70ac 70ac u 01 01
+70ac 70ac s 	inc	hl
+70ad 70ad d 3a2d73
+70ad 70ad u 03 01
+70ad 70ad s 	ld	a,(RATE)	; Rate
+70b0 70b0 d 77
+70b0 70b0 u 01 01
+70b0 70b0 s 	ld	(hl),a
+70b1 70b1 d 23
+70b1 70b1 u 01 01
+70b1 70b1 s 	inc	hl
+70b2 70b2 d af
+70b2 70b2 u 01 01
+70b2 70b2 s 	xor	a
+70b3 70b3 d 77
+70b3 70b3 u 01 01
+70b3 70b3 s 	ld	(hl),a		; Taglen (128 bits) on 2B
+70b4 70b4 d 23
+70b4 70b4 u 01 01
+70b4 70b4 s 	inc	hl
+70b5 70b5 d 3e80
+70b5 70b5 u 02 01
+70b5 70b5 s 	ld	a,128
+70b7 70b7 d 77
+70b7 70b7 u 01 01
+70b7 70b7 s 	ld	(hl),a
+70b8 70b8 d 23
+70b8 70b8 u 01 01
+70b8 70b8 s 	inc	hl
+70b9 70b9 d 3a2f73
+70b9 70b9 u 03 01
+70b9 70b9 s 	ld	a,(BROUND)
+70bc 70bc d cb27
+70bc 70bc u 02 01
+70bc 70bc s 	sla	a
+70be 70be d cb27
+70be 70be u 02 01
+70be 70be s 	sla	a
+70c0 70c0 d cb27
+70c0 70c0 u 02 01
+70c0 70c0 s 	sla	a
+70c2 70c2 d cb27
+70c2 70c2 u 02 01
+70c2 70c2 s 	sla	a
+70c4 70c4 d 4f
+70c4 70c4 u 01 01
+70c4 70c4 s 	ld	c,a
+70c5 70c5 d 3a2e73
+70c5 70c5 u 03 01
+70c5 70c5 s 	ld	a,(AROUND)
+70c8 70c8 d 81
+70c8 70c8 u 01 01
+70c8 70c8 s 	add	a,c
+70c9 70c9 d 77
+70c9 70c9 u 01 01
+70c9 70c9 s 	ld	(hl),a
+70ca 70ca d 23
+70ca 70ca u 01 01
+70ca 70ca s 	inc	hl
+70cb 70cb d af
+70cb 70cb u 01 01
+70cb 70cb s 	xor	a
+70cc 70cc d 77
+70cc 70cc u 01 01
+70cc 70cc s 	ld	(hl),a
+70cd 70cd d 23
+70cd 70cd u 01 01
+70cd 70cd s 	inc	hl
+70ce 70ce d 3a5073
+70ce 70ce u 03 01
+70ce 70ce s 	ld	a,(VERS)
+70d1 70d1 d 77
+70d1 70d1 u 01 01
+70d1 70d1 s 	ld	(hl),a
+70d2 70d2 d 23
+70d2 70d2 u 01 01
+70d2 70d2 s 	inc	hl
+70d3 70d3 s 	;; 
+70d3 70d3 d 0e10
+70d3 70d3 u 02 01
+70d3 70d3 s PADKN	ld	c,16		; Concatenate key to current (HL)
+70d5 70d5 d 0600
+70d5 70d5 u 02 01
+70d5 70d5 s 	ld	b,0
+70d7 70d7 d eb
+70d7 70d7 u 01 01
+70d7 70d7 s 	ex	de,hl
+70d8 70d8 d 213073
+70d8 70d8 u 03 01
+70d8 70d8 s 	ld	hl,KEY
+70db 70db d edb0
+70db 70db u 02 01
+70db 70db s 	ldir
+70dd 70dd d 0e10
+70dd 70dd u 02 01
+70dd 70dd s 	ld	c,16
+70df 70df d 0600
+70df 70df u 02 01
+70df 70df s 	ld	b,0
+70e1 70e1 d 214073
+70e1 70e1 u 03 01
+70e1 70e1 s 	ld	hl,NONCE
+70e4 70e4 d edb0
+70e4 70e4 u 02 01
+70e4 70e4 s 	ldir
+70e6 70e6 d eb
+70e6 70e6 u 01 01
+70e6 70e6 s 	ex	de,hl
+70e7 70e7 d c9
+70e7 70e7 u 01 01
+70e7 70e7 s 	ret
+70e8 70e8 s 	;;
+70e8 70e8 d 21f472
+70e8 70e8 u 03 01
+70e8 70e8 s POSTINI	ld	hl,S+24		; Post permutation XOR key in state
+70eb 70eb d 113073
+70eb 70eb u 03 01
+70eb 70eb s 	ld	de,KEY
+70ee 70ee d 0610
+70ee 70ee u 02 01
+70ee 70ee s 	ld	b,16		; Only change last 2 64b of state
+70f0 70f0 d 1a
+70f0 70f0 u 01 01
+70f0 70f0 s POSTL	ld	a,(de)
+70f1 70f1 d ae
+70f1 70f1 u 01 01
+70f1 70f1 s 	xor	a,(hl)
+70f2 70f2 d 77
+70f2 70f2 u 01 01
+70f2 70f2 s 	ld	(hl),a
+70f3 70f3 d 13
+70f3 70f3 u 01 01
+70f3 70f3 s 	inc	de
+70f4 70f4 d 23
+70f4 70f4 u 01 01
+70f4 70f4 s 	inc	hl
+70f5 70f5 d 10f9
+70f5 70f5 u 02 01
+70f5 70f5 s 	djnz	POSTL
+70f7 70f7 d c9
+70f7 70f7 u 01 01
+70f7 70f7 s 	ret
+70f8 70f8 f ascon8.asm
+70f8 70f8 s include ascon_perm.asm
+70f8 70f8 f ascon_perm.asm
+70f8 70f8 d 47
+70f8 70f8 u 01 01
+70f8 70f8 s PERMUT	ld	b,a		; Core permutation. Rounds in A
+70f9 70f9 d 21f372
+70f9 70f9 u 03 01
+70f9 70f9 s ROUND	ld	hl,S+23		; Constant in C 0xF0 or 0xB4
+70fc 70fc d 79
+70fc 70fc u 01 01
+70fc 70fc s 	ld	a,c		; Add round constant to S[2]
+70fd 70fd d ae
+70fd 70fd u 01 01
+70fd 70fd s 	xor	a,(hl)
+70fe 70fe d 77
+70fe 70fe u 01 01
+70fe 70fe s 	ld	(hl),a
+70ff 70ff d 79
+70ff 70ff u 01 01
+70ff 70ff s 	ld	a,c
+7100 7100 d d60f
+7100 7100 u 02 01
+7100 7100 s 	sub	15
+7102 7102 d 4f
+7102 7102 u 01 01
+7102 7102 s 	ld	c,a
+7103 7103 s 	;;
+7103 7103 d c5
+7103 7103 u 01 01
+7103 7103 s 	push	bc
+7104 7104 d cda171
+7104 7104 u 03 01
+7104 7104 s 	call	SUBSTIT		; Substitution layer
+7107 7107 d cd0e71
+7107 7107 u 03 01
+7107 7107 s 	call	LINEAR		; Linear diffusion layer
+710a 710a s 	;; 
+710a 710a d c1
+710a 710a u 01 01
+710a 710a s 	pop	bc
+710b 710b d 10ec
+710b 710b u 02 01
+710b 710b s 	djnz	ROUND
+710d 710d d c9
+710d 710d u 01 01
+710d 710d s 	ret
+710e 710e s 	;;
+710e 710e d 21dc72
+710e 710e u 03 01
+710e 710e s LINEAR	ld	hl,S		; Linear diffusion layer
+7111 7111 d e5
+7111 7111 u 01 01
+7111 7111 s 	push	hl
+7112 7112 d 0613
+7112 7112 u 02 01
+7112 7112 s 	ld	b,19
+7114 7114 d 0e1c
+7114 7114 u 02 01
+7114 7114 s 	ld	c,28
+7116 7116 d c5
+7116 7116 u 01 01
+7116 7116 s 	push	bc
+7117 7117 d cd4b71
+7117 7117 u 03 01
+7117 7117 s 	call	LDL
+711a 711a d 21e472
+711a 711a u 03 01
+711a 711a s 	ld	hl,S+8
+711d 711d d e5
+711d 711d u 01 01
+711d 711d s 	push	hl
+711e 711e d 063d
+711e 711e u 02 01
+711e 711e s 	ld	b,61
+7120 7120 d 0e27
+7120 7120 u 02 01
+7120 7120 s 	ld	c,39
+7122 7122 d c5
+7122 7122 u 01 01
+7122 7122 s 	push	bc
+7123 7123 d cd4b71
+7123 7123 u 03 01
+7123 7123 s 	call	LDL
+7126 7126 d 21ec72
+7126 7126 u 03 01
+7126 7126 s 	ld	hl,S+16
+7129 7129 d e5
+7129 7129 u 01 01
+7129 7129 s 	push	hl
+712a 712a d 0601
+712a 712a u 02 01
+712a 712a s 	ld	b,1
+712c 712c d 0e06
+712c 712c u 02 01
+712c 712c s 	ld	c,6
+712e 712e d c5
+712e 712e u 01 01
+712e 712e s 	push	bc
+712f 712f d cd4b71
+712f 712f u 03 01
+712f 712f s 	call	LDL
+7132 7132 d 21f472
+7132 7132 u 03 01
+7132 7132 s 	ld	hl,S+24
+7135 7135 d e5
+7135 7135 u 01 01
+7135 7135 s 	push	hl
+7136 7136 d 060a
+7136 7136 u 02 01
+7136 7136 s 	ld	b,10
+7138 7138 d 0e11
+7138 7138 u 02 01
+7138 7138 s 	ld	c,17
+713a 713a d c5
+713a 713a u 01 01
+713a 713a s 	push	bc
+713b 713b d cd4b71
+713b 713b u 03 01
+713b 713b s 	call	LDL
+713e 713e d 21fc72
+713e 713e u 03 01
+713e 713e s 	ld	hl,S+32
+7141 7141 d e5
+7141 7141 u 01 01
+7141 7141 s 	push	hl
+7142 7142 d 0607
+7142 7142 u 02 01
+7142 7142 s 	ld	b,7
+7144 7144 d 0e29
+7144 7144 u 02 01
+7144 7144 s 	ld	c,41
+7146 7146 d c5
+7146 7146 u 01 01
+7146 7146 s 	push	bc
+7147 7147 d cd4b71
+7147 7147 u 03 01
+7147 7147 s 	call	LDL
+714a 714a d c9
+714a 714a u 01 01
+714a 714a s 	ret
+714b 714b s 	;; 
+714b 714b d e5
+714b 714b u 01 01
+714b 714b s LDL	push	hl		; Fill in temp vars T, T+8
+714c 714c d 110473
+714c 714c u 03 01
+714c 714c s 	ld	de,TSTORE	; #rots sored in BC pushed on stack
+714f 714f d 0600
+714f 714f u 02 01
+714f 714f s 	ld	b,0		; on top of HL
+7151 7151 d 0e08
+7151 7151 u 02 01
+7151 7151 s 	ld	c,8
+7153 7153 d edb0
+7153 7153 u 02 01
+7153 7153 s 	ldir
+7155 7155 d e1
+7155 7155 u 01 01
+7155 7155 s 	pop	hl
+7156 7156 d 110c73
+7156 7156 u 03 01
+7156 7156 s 	ld	de,TSTORE+8
+7159 7159 d 0e08
+7159 7159 u 02 01
+7159 7159 s 	ld	c,8
+715b 715b d edb0
+715b 715b u 02 01
+715b 715b s 	ldir
+715d 715d s 	;;
+715d 715d d fde1
+715d 715d u 02 01
+715d 715d s 	pop	iy		; preserve return address
+715f 715f d c1
+715f 715f u 01 01
+715f 715f s 	pop	bc
+7160 7160 d 210473
+7160 7160 u 03 01
+7160 7160 s 	ld	hl,TSTORE
+7163 7163 d c5
+7163 7163 u 01 01
+7163 7163 s ARG1L	push	bc
+7164 7164 d cd8e71
+7164 7164 u 03 01
+7164 7164 s 	call	ROTR1
+7167 7167 d c1
+7167 7167 u 01 01
+7167 7167 s 	pop	bc
+7168 7168 d 10f9
+7168 7168 u 02 01
+7168 7168 s 	djnz	ARG1L
+716a 716a d 41
+716a 716a u 01 01
+716a 716a s 	ld	b,c
+716b 716b d 210c73
+716b 716b u 03 01
+716b 716b s 	ld	hl,TSTORE+8
+716e 716e d c5
+716e 716e u 01 01
+716e 716e s ARG2L	push	bc
+716f 716f d cd8e71
+716f 716f u 03 01
+716f 716f s 	call	ROTR1
+7172 7172 d c1
+7172 7172 u 01 01
+7172 7172 s 	pop	bc
+7173 7173 d 10f9
+7173 7173 u 02 01
+7173 7173 s 	djnz	ARG2L
+7175 7175 s 	;;
+7175 7175 d e1
+7175 7175 u 01 01
+7175 7175 s 	pop	hl		; XOR S[HL] T and T+8
+7176 7176 d 0608
+7176 7176 u 02 01
+7176 7176 s 	ld	b,8
+7178 7178 d 110c73
+7178 7178 u 03 01
+7178 7178 s 	ld	de,TSTORE+8
+717b 717b d dd210473
+717b 717b u 04 01
+717b 717b s 	ld	ix,TSTORE
+717f 717f d 1a
+717f 717f u 01 01
+717f 717f s XOR3L	ld	a,(de)
+7180 7180 d ddae00
+7180 7180 u 03 01
+7180 7180 s 	xor	a,(ix)
+7183 7183 d ae
+7183 7183 u 01 01
+7183 7183 s 	xor	a,(hl)
+7184 7184 d 77
+7184 7184 u 01 01
+7184 7184 s 	ld	(hl),a
+7185 7185 d 23
+7185 7185 u 01 01
+7185 7185 s 	inc	hl
+7186 7186 d dd23
+7186 7186 u 02 01
+7186 7186 s 	inc	ix
+7188 7188 d 13
+7188 7188 u 01 01
+7188 7188 s 	inc	de
+7189 7189 d 10f4
+7189 7189 u 02 01
+7189 7189 s 	djnz	XOR3L
+718b 718b d fde5
+718b 718b u 02 01
+718b 718b s 	push	iy
+718d 718d d c9
+718d 718d u 01 01
+718d 718d s 	ret
+718e 718e s 	;; 
+718e 718e d e5
+718e 718e u 01 01
+718e 718e s ROTR1	push	hl		; Rot right 1b the 8B pointed by HL
+718f 718f d cb3e
+718f 718f u 02 01
+718f 718f s 	srl	(hl)
+7191 7191 d 23
+7191 7191 u 01 01
+7191 7191 s 	inc	hl
+7192 7192 d 0607
+7192 7192 u 02 01
+7192 7192 s 	ld	b,7		; Use B
+7194 7194 d cb1e
+7194 7194 u 02 01
+7194 7194 s R1LOOP	rr	(hl)
+7196 7196 d 23
+7196 7196 u 01 01
+7196 7196 s 	inc	hl
+7197 7197 d 10fb
+7197 7197 u 02 01
+7197 7197 s 	djnz	R1LOOP
+7199 7199 d e1
+7199 7199 u 01 01
+7199 7199 s 	pop	hl
+719a 719a d 3004
+719a 719a u 02 01
+719a 719a s 	jr	NC,R1OUT
+719c 719c d 3e80
+719c 719c u 02 01
+719c 719c s 	ld	a,0x80
+719e 719e d b6
+719e 719e u 01 01
+719e 719e s 	or	a,(hl)
+719f 719f d 77
+719f 719f u 01 01
+719f 719f s 	ld	(hl),a
+71a0 71a0 d c9
+71a0 71a0 u 01 01
+71a0 71a0 s R1OUT	ret			; HL restored on exit
+71a1 71a1 s 	;; 
+71a1 71a1 d 21dc72
+71a1 71a1 u 03 01
+71a1 71a1 s SUBSTIT	ld	hl,S
+71a4 71a4 d 11fc72
+71a4 71a4 u 03 01
+71a4 71a4 s 	ld	de,S+32
+71a7 71a7 d cd1872
+71a7 71a7 u 03 01
+71a7 71a7 s 	call	XORSTA
+71aa 71aa d 21fc72
+71aa 71aa u 03 01
+71aa 71aa s 	ld	hl,S+32
+71ad 71ad d 11f472
+71ad 71ad u 03 01
+71ad 71ad s 	ld	de,S+24
+71b0 71b0 d cd1872
+71b0 71b0 u 03 01
+71b0 71b0 s 	call	XORSTA
+71b3 71b3 d 21ec72
+71b3 71b3 u 03 01
+71b3 71b3 s 	ld	hl,S+16
+71b6 71b6 d 11e472
+71b6 71b6 u 03 01
+71b6 71b6 s 	ld	de,S+8
+71b9 71b9 d cd1872
+71b9 71b9 u 03 01
+71b9 71b9 s 	call	XORSTA
+71bc 71bc d dd210473
+71bc 71bc u 04 01
+71bc 71bc s 	ld	ix,TSTORE	; Compute T
+71c0 71c0 d 11dc72
+71c0 71c0 u 03 01
+71c0 71c0 s 	ld	de,S
+71c3 71c3 d 21e472
+71c3 71c3 u 03 01
+71c3 71c3 s 	ld	hl,S+8
+71c6 71c6 d cd2272
+71c6 71c6 u 03 01
+71c6 71c6 s 	call	TSUBST
+71c9 71c9 d cd2272
+71c9 71c9 u 03 01
+71c9 71c9 s 	call	TSUBST
+71cc 71cc d cd2272
+71cc 71cc u 03 01
+71cc 71cc s 	call	TSUBST
+71cf 71cf d cd2272
+71cf 71cf u 03 01
+71cf 71cf s 	call	TSUBST
+71d2 71d2 d 21dc72
+71d2 71d2 u 03 01
+71d2 71d2 s 	ld	hl,S
+71d5 71d5 d cd2272
+71d5 71d5 u 03 01
+71d5 71d5 s 	call	TSUBST
+71d8 71d8 s 	;;
+71d8 71d8 d 21dc72
+71d8 71d8 u 03 01
+71d8 71d8 s 	ld	hl,S
+71db 71db d 110c73
+71db 71db u 03 01
+71db 71db s 	ld	de,TSTORE+8
+71de 71de d cd1872
+71de 71de u 03 01
+71de 71de s 	call	XORSTA
+71e1 71e1 d cd1872
+71e1 71e1 u 03 01
+71e1 71e1 s 	call	XORSTA
+71e4 71e4 d cd1872
+71e4 71e4 u 03 01
+71e4 71e4 s 	call	XORSTA
+71e7 71e7 d cd1872
+71e7 71e7 u 03 01
+71e7 71e7 s 	call	XORSTA
+71ea 71ea d 110473
+71ea 71ea u 03 01
+71ea 71ea s 	ld	de,TSTORE
+71ed 71ed d cd1872
+71ed 71ed u 03 01
+71ed 71ed s 	call	XORSTA
+71f0 71f0 s 	;;
+71f0 71f0 d 21e472
+71f0 71f0 u 03 01
+71f0 71f0 s 	ld	hl,S+8
+71f3 71f3 d 11dc72
+71f3 71f3 u 03 01
+71f3 71f3 s 	ld	de,S
+71f6 71f6 d cd1872
+71f6 71f6 u 03 01
+71f6 71f6 s 	call	XORSTA
+71f9 71f9 d 21dc72
+71f9 71f9 u 03 01
+71f9 71f9 s 	ld	hl,S
+71fc 71fc d 11fc72
+71fc 71fc u 03 01
+71fc 71fc s 	ld	de,S+32
+71ff 71ff d cd1872
+71ff 71ff u 03 01
+71ff 71ff s 	call	XORSTA
+7202 7202 d 21f472
+7202 7202 u 03 01
+7202 7202 s 	ld	hl,S+24
+7205 7205 d 11ec72
+7205 7205 u 03 01
+7205 7205 s 	ld	de,S+16
+7208 7208 d cd1872
+7208 7208 u 03 01
+7208 7208 s 	call	XORSTA
+720b 720b d 0608
+720b 720b u 02 01
+720b 720b s 	ld	b,8
+720d 720d d 21ec72
+720d 720d u 03 01
+720d 720d s 	ld	hl,S+16
+7210 7210 d 7e
+7210 7210 u 01 01
+7210 7210 s FFLOOP	ld	a,(hl)
+7211 7211 d eeff
+7211 7211 u 02 01
+7211 7211 s 	xor	a,0xFF
+7213 7213 d 77
+7213 7213 u 01 01
+7213 7213 s 	ld	(hl),a
+7214 7214 d 23
+7214 7214 u 01 01
+7214 7214 s 	inc	hl
+7215 7215 d 10f9
+7215 7215 u 02 01
+7215 7215 s 	djnz FFLOOP
+7217 7217 d c9
+7217 7217 u 01 01
+7217 7217 s 	ret
+7218 7218 s 	;; 
+7218 7218 d 0608
+7218 7218 u 02 01
+7218 7218 s XORSTA	ld	b,8		; S[hl] ^= S[de]
+721a 721a d 1a
+721a 721a u 01 01
+721a 721a s XORLOOP	ld	a,(de)
+721b 721b d ae
+721b 721b u 01 01
+721b 721b s 	xor	a,(hl)
+721c 721c d 77
+721c 721c u 01 01
+721c 721c s 	ld	(hl),a
+721d 721d d 13
+721d 721d u 01 01
+721d 721d s 	inc	de
+721e 721e d 23
+721e 721e u 01 01
+721e 721e s 	inc	hl
+721f 721f d 10f9
+721f 721f u 02 01
+721f 721f s 	djnz	XORLOOP
+7221 7221 d c9
+7221 7221 u 01 01
+7221 7221 s 	ret
+7222 7222 s 	;; 
+7222 7222 d 0608
+7222 7222 u 02 01
+7222 7222 s TSUBST	ld	b,8		; T[i] = S[i]^FF & S[i+1%5]
+7224 7224 d 1a
+7224 7224 u 01 01
+7224 7224 s TSLOOP	ld	a,(de)
+7225 7225 d eeff
+7225 7225 u 02 01
+7225 7225 s 	xor	a,0xFF
+7227 7227 d a6
+7227 7227 u 01 01
+7227 7227 s 	and	a,(hl)
+7228 7228 d dd7700
+7228 7228 u 03 01
+7228 7228 s 	ld	(ix),a
+722b 722b d dd23
+722b 722b u 02 01
+722b 722b s 	inc	ix
+722d 722d d 13
+722d 722d u 01 01
+722d 722d s 	inc	de
+722e 722e d 23
+722e 722e u 01 01
+722e 722e s 	inc	hl
+722f 722f d 10f3
+722f 722f u 02 01
+722f 722f s 	djnz	TSLOOP
+7231 7231 d c9
+7231 7231 u 01 01
+7231 7231 s 	ret
+7232 7232 s 	;; 
+7232 7232 f ascon8.asm
+7232 7232 s include ascon_data.asm
+7232 7232 f ascon_data.asm
+7232 7232 d 3a6173
+7232 7232 u 03 01
+7232 7232 s ADATA	ld	a,(ALEN)
+7235 7235 d 4f
+7235 7235 u 01 01
+7235 7235 s 	ld	c,a
+7236 7236 d 115173
+7236 7236 u 03 01
+7236 7236 s 	ld	de,ASSOC
+7239 7239 d 21dc72
+7239 7239 u 03 01
+7239 7239 s ABLOCK	ld	hl,S
+723c 723c d 0610
+723c 723c u 02 01
+723c 723c s 	ld	b,16		; AEAD128 RATE=16 bytes
+723e 723e d 1a
+723e 723e u 01 01
+723e 723e s ADATAL	ld	a,(de)
+723f 723f d ae
+723f 723f u 01 01
+723f 723f s 	xor	a,(hl)
+7240 7240 d 77
+7240 7240 u 01 01
+7240 7240 s 	ld	(hl),a
+7241 7241 d 23
+7241 7241 u 01 01
+7241 7241 s 	inc	hl
+7242 7242 d 13
+7242 7242 u 01 01
+7242 7242 s 	inc	de
+7243 7243 d 10f9
+7243 7243 u 02 01
+7243 7243 s 	djnz	ADATAL
+7245 7245 d d5
+7245 7245 u 01 01
+7245 7245 s 	push	de
+7246 7246 d c5
+7246 7246 u 01 01
+7246 7246 s 	push	bc
+7247 7247 d 3e08
+7247 7247 u 02 01
+7247 7247 s 	ld	a,8
+7249 7249 d 0eb4
+7249 7249 u 02 01
+7249 7249 s 	ld	c,0xB4		; Round constant init for 8
+724b 724b d cdf870
+724b 724b u 03 01
+724b 724b s 	call	PERMUT		; Perform A rounds
+724e 724e d c1
+724e 724e u 01 01
+724e 724e s 	pop	bc
+724f 724f d 79
+724f 724f u 01 01
+724f 724f s 	ld	a,c
+7250 7250 d d610
+7250 7250 u 02 01
+7250 7250 s 	sub	a,16
+7252 7252 d 4f
+7252 7252 u 01 01
+7252 7252 s 	ld	c,a
+7253 7253 d d1
+7253 7253 u 01 01
+7253 7253 s 	pop	de
+7254 7254 d 20e3
+7254 7254 u 02 01
+7254 7254 s 	jr	NZ,ABLOCK
+7256 7256 d 21fc72
+7256 7256 u 03 01
+7256 7256 s 	ld	hl,S+32		; S[4] ^= 1<<63
+7259 7259 d 7e
+7259 7259 u 01 01
+7259 7259 s 	ld	a,(hl)
+725a 725a d ee80
+725a 725a u 02 01
+725a 725a s 	xor	a,0x80
+725c 725c d 77
+725c 725c u 01 01
+725c 725c s 	ld	(hl),a
+725d 725d d c9
+725d 725d u 01 01
+725d 725d s 	ret
+725e 725e s 	;; 
+725e 725e f ascon8.asm
+725e 725e s include ascon_plain.asm	
+725e 725e f ascon_plain.asm
+725e 725e d 116273
+725e 725e u 03 01
+725e 725e s PLTEXT	ld	de,PLAIN	; Assuming plaintext length < 16B
+7261 7261 d 21dc72
+7261 7261 u 03 01
+7261 7261 s 	ld	hl,S
+7264 7264 d 0610
+7264 7264 u 02 01
+7264 7264 s 	ld	b,16		; Process last (only here) block
+7266 7266 d 1a
+7266 7266 u 01 01
+7266 7266 s PLTLP	ld	a,(de)
+7267 7267 d ae
+7267 7267 u 01 01
+7267 7267 s 	xor	a,(hl)
+7268 7268 d 77
+7268 7268 u 01 01
+7268 7268 s 	ld	(hl),a
+7269 7269 d 13
+7269 7269 u 01 01
+7269 7269 s 	inc	de
+726a 726a d 23
+726a 726a u 01 01
+726a 726a s 	inc	hl
+726b 726b d 10f9
+726b 726b u 02 01
+726b 726b s 	djnz	PLTLP
+726d 726d d 3a7273
+726d 726d u 03 01
+726d 726d s 	ld	a,(PLEN)	; Assumes PLEN < 8
+7270 7270 d 47
+7270 7270 u 01 01
+7270 7270 s 	ld	b,a
+7271 7271 d 217373
+7271 7271 u 03 01
+7271 7271 s 	ld	hl,CIPHER
+7274 7274 d 11e372
+7274 7274 u 03 01
+7274 7274 s 	ld	de,S+7
+7277 7277 d 1a
+7277 7277 u 01 01
+7277 7277 s CITLP	ld	a,(de)
+7278 7278 d 77
+7278 7278 u 01 01
+7278 7278 s 	ld	(hl),a
+7279 7279 d 78
+7279 7279 u 01 01
+7279 7279 s 	ld	a,b
+727a 727a d d601
+727a 727a u 02 01
+727a 727a s 	sub	a,1
+727c 727c d 47
+727c 727c u 01 01
+727c 727c s 	ld	b,a
+727d 727d d 23
+727d 727d u 01 01
+727d 727d s 	inc	hl
+727e 727e d 1b
+727e 727e u 01 01
+727e 727e s 	dec	de
+727f 727f d 20f6
+727f 727f u 02 01
+727f 727f s 	jr	NZ,CITLP
+7281 7281 d c9
+7281 7281 u 01 01
+7281 7281 s 	ret
+7282 7282 s 	;; 
+7282 7282 f ascon8.asm
+7282 7282 s include ascon_final.asm
+7282 7282 f ascon_final.asm
+7282 7282 d 21ec72
+7282 7282 u 03 01
+7282 7282 s FINALZ	ld	hl,S+16		; Finalization
+7285 7285 d 113073
+7285 7285 u 03 01
+7285 7285 s 	ld	de,KEY		; Update S[2], S[3]
+7288 7288 d 0610
+7288 7288 u 02 01
+7288 7288 s 	ld	b,16
+728a 728a d cdc972
+728a 728a u 03 01
+728a 728a s 	call	FINLP
+728d 728d s 	;;
+728d 728d d 3e0c
+728d 728d u 02 01
+728d 728d s 	ld	a,12		; 12-round permutation
+728f 728f d 0ef0
+728f 728f u 02 01
+728f 728f s 	ld	c,0xF0
+7291 7291 d cdf870
+7291 7291 u 03 01
+7291 7291 s 	call	PERMUT
+7294 7294 s 	;;
+7294 7294 d 21f472
+7294 7294 u 03 01
+7294 7294 s 	ld	hl,S+24
+7297 7297 d 113873
+7297 7297 u 03 01
+7297 7297 s 	ld	de,KEY+8
+729a 729a d 0608
+729a 729a u 02 01
+729a 729a s 	ld	b,8
+729c 729c d cdc972
+729c 729c u 03 01
+729c 729c s 	call 	FINLP
+729f 729f d 113073
+729f 729f u 03 01
+729f 729f s 	ld	de,KEY
+72a2 72a2 d 0608
+72a2 72a2 u 02 01
+72a2 72a2 s 	ld	b,8
+72a4 72a4 d cdc972
+72a4 72a4 u 03 01
+72a4 72a4 s 	call	FINLP
+72a7 72a7 s 	;;
+72a7 72a7 d 218373
+72a7 72a7 u 03 01
+72a7 72a7 s 	ld	hl,TAG
+72aa 72aa d 11fb72
+72aa 72aa u 03 01
+72aa 72aa s 	ld	de,S+31
+72ad 72ad d 0608
+72ad 72ad u 02 01
+72ad 72ad s 	ld	b,8
+72af 72af d 1a
+72af 72af u 01 01
+72af 72af s TAGLP1	ld	a,(de)
+72b0 72b0 d 77
+72b0 72b0 u 01 01
+72b0 72b0 s 	ld	(hl),a
+72b1 72b1 d 1b
+72b1 72b1 u 01 01
+72b1 72b1 s 	dec	de
+72b2 72b2 d 23
+72b2 72b2 u 01 01
+72b2 72b2 s 	inc	hl
+72b3 72b3 d 78
+72b3 72b3 u 01 01
+72b3 72b3 s 	ld	a,b
+72b4 72b4 d d601
+72b4 72b4 u 02 01
+72b4 72b4 s 	sub	a,1
+72b6 72b6 d 47
+72b6 72b6 u 01 01
+72b6 72b6 s 	ld	b,a
+72b7 72b7 d 20f6
+72b7 72b7 u 02 01
+72b7 72b7 s 	jr	NZ,TAGLP1
+72b9 72b9 d 110373
+72b9 72b9 u 03 01
+72b9 72b9 s 	ld	de,S+39
+72bc 72bc d 0608
+72bc 72bc u 02 01
+72bc 72bc s 	ld	b,8
+72be 72be d 1a
+72be 72be u 01 01
+72be 72be s TAGLP2	ld	a,(de)
+72bf 72bf d 77
+72bf 72bf u 01 01
+72bf 72bf s 	ld	(hl),a
+72c0 72c0 d 1b
+72c0 72c0 u 01 01
+72c0 72c0 s 	dec	de
+72c1 72c1 d 23
+72c1 72c1 u 01 01
+72c1 72c1 s 	inc	hl
+72c2 72c2 d 78
+72c2 72c2 u 01 01
+72c2 72c2 s 	ld	a,b
+72c3 72c3 d d601
+72c3 72c3 u 02 01
+72c3 72c3 s 	sub	a,1
+72c5 72c5 d 47
+72c5 72c5 u 01 01
+72c5 72c5 s 	ld	b,a
+72c6 72c6 d 20f6
+72c6 72c6 u 02 01
+72c6 72c6 s 	jr	NZ,TAGLP2
+72c8 72c8 d c9
+72c8 72c8 u 01 01
+72c8 72c8 s 	ret
+72c9 72c9 s 	;;
+72c9 72c9 d 1a
+72c9 72c9 u 01 01
+72c9 72c9 s FINLP	ld	a,(de)	
+72ca 72ca d ae
+72ca 72ca u 01 01
+72ca 72ca s 	xor	a,(hl)
+72cb 72cb d 77
+72cb 72cb u 01 01
+72cb 72cb s 	ld	(hl),a
+72cc 72cc d 23
+72cc 72cc u 01 01
+72cc 72cc s 	inc	hl
+72cd 72cd d 13
+72cd 72cd u 01 01
+72cd 72cd s 	inc	de
+72ce 72ce d 10f9
+72ce 72ce u 02 01
+72ce 72ce s 	djnz	FINLP
+72d0 72d0 d c9
+72d0 72d0 u 01 01
+72d0 72d0 s 	ret
+72d1 72d1 f ascon8.asm
+72d1 72d1 s 	;; 
+72d1 72d1 d 4153434f4e205a38300d00
+72d1 72d1 u 0b 02
+72d1 72d1 s MSG	defb	'ASCON Z80',0x0D,0
+72dc 72dc s S	dc	40,0x0		; 5 64-bit integers
+72dc 72dc d 00000000000000000000000000000000
+72ec 72ec d 00000000000000000000000000000000
+72fc 72fc d 0000000000000000
+72dc 72dc u 28 02
+7304 7304 s TSTORE	dc	40,0x0		; 5 64-bit integers temp
+7304 7304 d 00000000000000000000000000000000
+7314 7314 d 00000000000000000000000000000000
+7324 7324 d 0000000000000000
+7304 7304 u 28 02
+732c 732c d 80
+732c 732c u 01 02
+732c 732c s KLEN	defb	16*8		; Key size in bits
+732d 732d d 10
+732d 732d u 01 02
+732d 732d s RATE	defb	16		; In bytes
+732e 732e d 0c
+732e 732e u 01 02
+732e 732e s AROUND	defb	12
+732f 732f d 08
+732f 732f u 01 02
+732f 732f s BROUND	defb	8
+7330 7330 s KEY	defs	16		; Key 128 bits
+7340 7340 s NONCE	defs	16		; Nonce 128 bits
+7350 7350 d 01
+7350 7350 u 01 02
+7350 7350 s VERS	defb	1
+7351 7351 s 	;; Associated data, padded to a multiple of RATE bytes
+7351 7351 d 0000014e4f4353410000000000000000
+7351 7351 u 10 02
+7351 7351 s ASSOC	defb	0,0,1,'NOCSA',0,0,0,0,0,0,0,0
+7361 7361 d 10
+7361 7361 u 01 02
+7361 7361 s ALEN	defb	16
+7362 7362 s 	;; Plain text (8b max for now) same convention
+7362 7362 d 0000016e6f6373610000000000000000
+7362 7362 u 10 02
+7362 7362 s PLAIN	defb	0,0,1,'nocsa',0,0,0,0,0,0,0,0	
+7372 7372 d 05
+7372 7372 u 01 02
+7372 7372 s PLEN	defb	5
+7373 7373 s CIPHER	dc	16,0x0
+7373 7373 d 00000000000000000000000000000000
+7373 7373 u 10 02
+7383 7383 s TAG	dc	16,0x0
+7383 7383 d 00000000000000000000000000000000
+7383 7383 u 10 02
+7393 7393 s 	;;
+7393 7393 s 	end START		; Use ASCON<SPACE> to SYSTEM-load
+7000 e
+72dc a S
+7351 a ASSOC
+7050 a OUTCIT
+7232 a ADATA
+7361 a ALEN
+7383 a TAG
+7224 a TSLOOP
+725e a PLTEXT
+710e a LINEAR
+7350 a VERS
+7210 a FFLOOP
+7277 a CITLP
+7080 a OUTHEX
+7266 a PLTLP
+7372 a PLEN
+7163 a ARG1L
+716e a ARG2L
+7304 a TSTORE
+72af a TAGLP1
+72be a TAGLP2
+7282 a FINALZ
+7000 a START
+70e8 a POSTINI
+70a5 a INITV
+732e a AROUND
+7330 a KEY
+7362 a PLAIN
+732d a RATE
+717f a XOR3L
+72c9 a FINLP
+714b a LDL
+721a a XORLOOP
+7194 a R1LOOP
+71a0 a R1OUT
+72d1 a MSG
+70f8 a PERMUT
+732c a KLEN
+706a a OUTW
+71a1 a SUBSTIT
+7373 a CIPHER
+7218 a XORSTA
+7239 a ABLOCK
+718e a ROTR1
+70f0 a POSTL
+7061 a SHCUT
+70f9 a ROUND
+732f a BROUND
+708e a OUTH8
+7068 a OUTLN
+7055 a OUTSTA
+7340 a NONCE
+704b a OUTTAG
+7222 a TSUBST
+709b a CONV8
+723e a ADATAL
+70d3 a PADKN
