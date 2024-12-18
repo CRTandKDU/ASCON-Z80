@@ -1,16 +1,23 @@
-OUTTAG	ld	de,TAG
+OUTTAG	ld	hl,STR3
+	call	2f0aH
+	ld	de,TAG
 	jr	SHCUT
 	;; 
-OUTCIT	ld	de,CIPHER
+OUTCIT	ld	hl,STR1
+	call	2f0aH
+	ld	de,CIPHER
 	jr	SHCUT
 	;; 
-OUTSTA	ld	de,S		; Print 5x64 bits state
+OUTSTA	ld	hl, STR2
+	call	2f0aH
+	ld	de,S		; Print 5x64 bits state
 	call	OUTLN
 	call	OUTLN
 	call	OUTLN
 SHCUT	call	OUTLN
 	call	OUTLN
 	ret
+	;; 
 OUTLN	ld	b,4		; Print 1x64 bits line
 OUTW	ld	a,(de)		; Print 2 bytes
 	ld	h,a

@@ -1,458 +1,722 @@
    1:     -	7000          		org 	7000H
-   2:    0+17	7000  CDC901  	START	call 	01c9H
+   2:    0+17	7000  CDC901  	ENCRYPT	call 	01c9H
    3:   17+4	7003  AF      		xor	a
    4:   21+13	7004  329C40  		ld	(409cH),a
-   5:   34+10	7007  21D172  		ld	hl, MSG
+   5:   34+10	7007  217A74  		ld	hl, MSG
    6:   44+17	700A  CD0A2F  		call	2f0aH
    7:					;; 
-   8:   61+17	700D  CDA570  		call	INITV		; Set up init value
-   9:   78+17	7010  CD5570  		call	OUTSTA
+   8:   61+17	700D  CDBA70  		call	INITV		; Set up init value
+   9:   78+17	7010  CD6470  		call	OUTSTA
   10:   95+7	7013  3E0C    		ld	a,12
   11:  102+7	7015  0EF0    		ld	c,0xF0		; Round constant init for 12
-  12:  109+17	7017  CDF870  		call	PERMUT		; Perform A rounds
-  13:  126+17	701A  CDE870  		call	POSTINI		; Terminate initialization
+  12:  109+17	7017  CD0D71  		call	PERMUT		; Perform A rounds
+  13:  126+17	701A  CDFD70  		call	POSTINI		; Terminate initialization
   14:					;;
-  15:  143+17	701D  CD3272  		call	ADATA		; Process associated data
+  15:  143+17	701D  CD4772  		call	ADFULL		; Process associated data
   16:					;;
-  17:  160+17	7020  CD5E72  		call	PLTEXT		; Process plain text
+  17:  160+17	7020  CD4573  		call	PLTEXT		; Process plain text
   18:					;; 
-  19:  177+17	7023  CD8272  		call	FINALZ		; Finalization
+  19:  177+17	7023  CD1474  		call	FINALZ		; Finalization
   20:					;; 
   21:  194+7	7026  3E0D    		ld	a,0x0D
   22:  201+17	7028  CD3300  		call	0033H
   23:  218+7	702B  3E0D    		ld	a,0x0D
   24:  225+17	702D  CD3300  		call	0033H
-  25:  242+17	7030  CD5070  		call	OUTCIT		; Print ciphertext
+  25:  242+17	7030  CD5970  		call	OUTCIT		; Print ciphertext
   26:  259+7	7033  3E0D    		ld	a,0x0D
   27:  266+17	7035  CD3300  		call	0033H
-  28:  283+17	7038  CD5570  		call	OUTSTA		; Print state
+  28:  283+17	7038  CD6470  		call	OUTSTA		; Print state
   29:  300+7	703B  3E0D    		ld	a,0x0D
   30:  307+17	703D  CD3300  		call	0033H
-  31:  324+17	7040  CD4B70  		call	OUTTAG		; Print tag
+  31:  324+17	7040  CD4E70  		call	OUTTAG		; Print tag
   32:  341+7	7043  3E0D    		ld	a,0x0D
   33:  348+17	7045  CD3300  		call	0033H
   34:					;;
-  35:					;; 
-  36:  365+10	7048  C3CC06  		jp	06ccH		; Jump to BASIC
-  37:					;;
-  38:				include ascon_out.asm
+  35:					;;
+  36:  365+17	7048  CD4900  		call	0049H		; Wait for keypress
+  37:  382+10	704B  C3CC06  		jp	06ccH		; Jump to BASIC
+  38:					;;
+  39:				include ascon_out.asm
 **** ascon_out.asm ****
-   1:  375+10	704B  118373  	OUTTAG	ld	de,TAG
-   2:  385+12	704E  1811    		jr	SHCUT
-   3:					;; 
-   4:  397+10	7050  117373  	OUTCIT	ld	de,CIPHER
-   5:  407+12	7053  180C    		jr	SHCUT
-   6:					;; 
-   7:  419+10	7055  11DC72  	OUTSTA	ld	de,S		; Print 5x64 bits state
-   8:  429+17	7058  CD6870  		call	OUTLN
-   9:  446+17	705B  CD6870  		call	OUTLN
-  10:  463+17	705E  CD6870  		call	OUTLN
-  11:  480+17	7061  CD6870  	SHCUT	call	OUTLN
-  12:  497+17	7064  CD6870  		call	OUTLN
-  13:  514+10	7067  C9      		ret
-  14:  524+7	7068  0604    	OUTLN	ld	b,4		; Print 1x64 bits line
-  15:  531+7	706A  1A      	OUTW	ld	a,(de)		; Print 2 bytes
-  16:  538+4	706B  67      		ld	h,a
-  17:  542+6	706C  13      		inc	de
-  18:  548+7	706D  1A      		ld	a,(de)
-  19:  555+4	706E  6F      		ld	l,a
-  20:  559+6	706F  13      		inc 	de
-  21:  565+17	7070  CD8070  		call	OUTHEX
-  22:  582+7	7073  3E20    		ld	a,0x20
-  23:  589+17	7075  CD3A03  		call	033AH
-  24:  606+8+5	7078  10F0    		djnz	OUTW
-  25:  614+7	707A  3E0D    		ld	a,0x0D
-  26:  621+17	707C  CD3A03  		call	033AH
-  27:  638+10	707F  C9      		ret
-  28:					;; 
-  29:  648+4	7080  4C      	OUTHEX	ld	c,h		; Print HL in hex
-  30:  652+17	7081  CD8E70  		call	OUTH8
-  31:  669+7	7084  3E20    		ld	a,0x20
-  32:  676+17	7086  CD3A03  		call	033AH
-  33:  693+4	7089  4D      		ld 	c,l
-  34:  697+17	708A  CD8E70  		call	OUTH8
-  35:  714+10	708D  C9      		ret
-  36:  724+4	708E  79      	OUTH8	ld	a,c		; Print C in hex
-  37:  728+7	708F  E6F0    		and	a,0xF0
-  38:  735+4	7091  0F      		rrca
-  39:  739+4	7092  0F      		rrca
-  40:  743+4	7093  0F      		rrca
-  41:  747+4	7094  0F      		rrca
-  42:  751+17	7095  CD9B70  		call	CONV8
-  43:  768+4	7098  79      		ld	a,c
-  44:  772+7	7099  E60F    		and	0x0F
-  45:  779+4	709B  B7      	CONV8	or	a
-  46:  783+4	709C  27      		daa
-  47:  787+7	709D  C6F0    		add	a,0xF0
-  48:  794+7	709F  CE40    		adc	a,0x40
-  49:  801+17	70A1  CD3A03  		call	033AH
-  50:  818+10	70A4  C9      		ret
-  51:					
+   1:  392+10	704E  217474  	OUTTAG	ld	hl,STR3
+   2:  402+17	7051  CD0A2F  		call	2f0aH
+   3:  419+10	7054  11FB74  		ld	de,TAG
+   4:  429+12	7057  181D    		jr	SHCUT
+   5:					;; 
+   6:  441+10	7059  216374  	OUTCIT	ld	hl,STR1
+   7:  451+17	705C  CD0A2F  		call	2f0aH
+   8:  468+10	705F  111776  		ld	de,CIPHER
+   9:  478+12	7062  1812    		jr	SHCUT
+  10:					;; 
+  11:  490+10	7064  216C74  	OUTSTA	ld	hl, STR2
+  12:  500+17	7067  CD0A2F  		call	2f0aH
+  13:  517+10	706A  118574  		ld	de,S		; Print 5x64 bits state
+  14:  527+17	706D  CD7D70  		call	OUTLN
+  15:  544+17	7070  CD7D70  		call	OUTLN
+  16:  561+17	7073  CD7D70  		call	OUTLN
+  17:  578+17	7076  CD7D70  	SHCUT	call	OUTLN
+  18:  595+17	7079  CD7D70  		call	OUTLN
+  19:  612+10	707C  C9      		ret
+  20:					;; 
+  21:  622+7	707D  0604    	OUTLN	ld	b,4		; Print 1x64 bits line
+  22:  629+7	707F  1A      	OUTW	ld	a,(de)		; Print 2 bytes
+  23:  636+4	7080  67      		ld	h,a
+  24:  640+6	7081  13      		inc	de
+  25:  646+7	7082  1A      		ld	a,(de)
+  26:  653+4	7083  6F      		ld	l,a
+  27:  657+6	7084  13      		inc 	de
+  28:  663+17	7085  CD9570  		call	OUTHEX
+  29:  680+7	7088  3E20    		ld	a,0x20
+  30:  687+17	708A  CD3A03  		call	033AH
+  31:  704+8+5	708D  10F0    		djnz	OUTW
+  32:  712+7	708F  3E0D    		ld	a,0x0D
+  33:  719+17	7091  CD3A03  		call	033AH
+  34:  736+10	7094  C9      		ret
+  35:					;; 
+  36:  746+4	7095  4C      	OUTHEX	ld	c,h		; Print HL in hex
+  37:  750+17	7096  CDA370  		call	OUTH8
+  38:  767+7	7099  3E20    		ld	a,0x20
+  39:  774+17	709B  CD3A03  		call	033AH
+  40:  791+4	709E  4D      		ld 	c,l
+  41:  795+17	709F  CDA370  		call	OUTH8
+  42:  812+10	70A2  C9      		ret
+  43:  822+4	70A3  79      	OUTH8	ld	a,c		; Print C in hex
+  44:  826+7	70A4  E6F0    		and	a,0xF0
+  45:  833+4	70A6  0F      		rrca
+  46:  837+4	70A7  0F      		rrca
+  47:  841+4	70A8  0F      		rrca
+  48:  845+4	70A9  0F      		rrca
+  49:  849+17	70AA  CDB070  		call	CONV8
+  50:  866+4	70AD  79      		ld	a,c
+  51:  870+7	70AE  E60F    		and	0x0F
+  52:  877+4	70B0  B7      	CONV8	or	a
+  53:  881+4	70B1  27      		daa
+  54:  885+7	70B2  C6F0    		add	a,0xF0
+  55:  892+7	70B4  CE40    		adc	a,0x40
+  56:  899+17	70B6  CD3A03  		call	033AH
+  57:  916+10	70B9  C9      		ret
+  58:					
 **** ascon8.asm ****
-  39:				include ascon_init.asm	
+  40:				include ascon_init.asm	
 **** ascon_init.asm ****
-   1:  828+10	70A5  21DC72  	INITV	ld	hl,S		; Init vector
-   2:  838+4	70A8  AF      		xor	a
-   3:  842+7	70A9  77      		ld	(hl),a		; 0x00
-   4:  849+6	70AA  23      		inc	hl
-   5:  855+7	70AB  77      		ld	(hl),a		; 0x00
-   6:  862+6	70AC  23      		inc	hl
-   7:  868+13	70AD  3A2D73  		ld	a,(RATE)	; Rate
-   8:  881+7	70B0  77      		ld	(hl),a
-   9:  888+6	70B1  23      		inc	hl
-  10:  894+4	70B2  AF      		xor	a
-  11:  898+7	70B3  77      		ld	(hl),a		; Taglen (128 bits) on 2B
-  12:  905+6	70B4  23      		inc	hl
-  13:  911+7	70B5  3E80    		ld	a,128
-  14:  918+7	70B7  77      		ld	(hl),a
-  15:  925+6	70B8  23      		inc	hl
-  16:  931+13	70B9  3A2F73  		ld	a,(BROUND)
-  17:  944+8	70BC  CB27    		sla	a
-  18:  952+8	70BE  CB27    		sla	a
-  19:  960+8	70C0  CB27    		sla	a
-  20:  968+8	70C2  CB27    		sla	a
-  21:  976+4	70C4  4F      		ld	c,a
-  22:  980+13	70C5  3A2E73  		ld	a,(AROUND)
-  23:  993+4	70C8  81      		add	a,c
-  24:  997+7	70C9  77      		ld	(hl),a
-  25: 1004+6	70CA  23      		inc	hl
-  26: 1010+4	70CB  AF      		xor	a
-  27: 1014+7	70CC  77      		ld	(hl),a
-  28: 1021+6	70CD  23      		inc	hl
-  29: 1027+13	70CE  3A5073  		ld	a,(VERS)
-  30: 1040+7	70D1  77      		ld	(hl),a
-  31: 1047+6	70D2  23      		inc	hl
+   1:  926+10	70BA  218574  	INITV	ld	hl,S		; Init vector
+   2:  936+4	70BD  AF      		xor	a
+   3:  940+7	70BE  77      		ld	(hl),a		; 0x00
+   4:  947+6	70BF  23      		inc	hl
+   5:  953+7	70C0  77      		ld	(hl),a		; 0x00
+   6:  960+6	70C1  23      		inc	hl
+   7:  966+13	70C2  3AD674  		ld	a,(RATE)	; Rate
+   8:  979+7	70C5  77      		ld	(hl),a
+   9:  986+6	70C6  23      		inc	hl
+  10:  992+4	70C7  AF      		xor	a
+  11:  996+7	70C8  77      		ld	(hl),a		; Taglen (128 bits) on 2B
+  12: 1003+6	70C9  23      		inc	hl
+  13: 1009+7	70CA  3E80    		ld	a,128
+  14: 1016+7	70CC  77      		ld	(hl),a
+  15: 1023+6	70CD  23      		inc	hl
+  16: 1029+13	70CE  3AD874  		ld	a,(BROUND)
+  17: 1042+8	70D1  CB27    		sla	a
+  18: 1050+8	70D3  CB27    		sla	a
+  19: 1058+8	70D5  CB27    		sla	a
+  20: 1066+8	70D7  CB27    		sla	a
+  21: 1074+4	70D9  4F      		ld	c,a
+  22: 1078+13	70DA  3AD774  		ld	a,(AROUND)
+  23: 1091+4	70DD  81      		add	a,c
+  24: 1095+7	70DE  77      		ld	(hl),a
+  25: 1102+6	70DF  23      		inc	hl
+  26: 1108+4	70E0  AF      		xor	a
+  27: 1112+7	70E1  77      		ld	(hl),a
+  28: 1119+6	70E2  23      		inc	hl
+  29: 1125+13	70E3  3AF974  		ld	a,(VERS)
+  30: 1138+7	70E6  77      		ld	(hl),a
+  31: 1145+6	70E7  23      		inc	hl
   32:					;; 
-  33: 1053+7	70D3  0E10    	PADKN	ld	c,16		; Concatenate key to current (HL)
-  34: 1060+7	70D5  0600    		ld	b,0
-  35: 1067+4	70D7  EB      		ex	de,hl
-  36: 1071+10	70D8  213073  		ld	hl,KEY
-  37: 1081+16+5	70DB  EDB0    		ldir
-  38: 1097+7	70DD  0E10    		ld	c,16
-  39: 1104+7	70DF  0600    		ld	b,0
-  40: 1111+10	70E1  214073  		ld	hl,NONCE
-  41: 1121+16+5	70E4  EDB0    		ldir
-  42: 1137+4	70E6  EB      		ex	de,hl
-  43: 1141+10	70E7  C9      		ret
+  33: 1151+7	70E8  0E10    	PADKN	ld	c,16		; Concatenate key to current (HL)
+  34: 1158+7	70EA  0600    		ld	b,0
+  35: 1165+4	70EC  EB      		ex	de,hl
+  36: 1169+10	70ED  21D974  		ld	hl,KEY
+  37: 1179+16+5	70F0  EDB0    		ldir
+  38: 1195+7	70F2  0E10    		ld	c,16
+  39: 1202+7	70F4  0600    		ld	b,0
+  40: 1209+10	70F6  21E974  		ld	hl,NONCE
+  41: 1219+16+5	70F9  EDB0    		ldir
+  42: 1235+4	70FB  EB      		ex	de,hl
+  43: 1239+10	70FC  C9      		ret
   44:					;;
-  45: 1151+10	70E8  21F472  	POSTINI	ld	hl,S+24		; Post permutation XOR key in state
-  46: 1161+10	70EB  113073  		ld	de,KEY
-  47: 1171+7	70EE  0610    		ld	b,16		; Only change last 2 64b of state
-  48: 1178+7	70F0  1A      	POSTL	ld	a,(de)
-  49: 1185+7	70F1  AE      		xor	a,(hl)
-  50: 1192+7	70F2  77      		ld	(hl),a
-  51: 1199+6	70F3  13      		inc	de
-  52: 1205+6	70F4  23      		inc	hl
-  53: 1211+8+5	70F5  10F9    		djnz	POSTL
-  54: 1219+10	70F7  C9      		ret
+  45: 1249+10	70FD  219D74  	POSTINI	ld	hl,S+24		; Post permutation XOR key in state
+  46: 1259+10	7100  11D974  		ld	de,KEY
+  47: 1269+7	7103  0610    		ld	b,16		; Only change last 2 64b of state
+  48: 1276+7	7105  1A      	POSTL	ld	a,(de)
+  49: 1283+7	7106  AE      		xor	a,(hl)
+  50: 1290+7	7107  77      		ld	(hl),a
+  51: 1297+6	7108  13      		inc	de
+  52: 1303+6	7109  23      		inc	hl
+  53: 1309+8+5	710A  10F9    		djnz	POSTL
+  54: 1317+10	710C  C9      		ret
 **** ascon8.asm ****
-  40:				include ascon_perm.asm
+  41:				include ascon_perm.asm
 **** ascon_perm.asm ****
-   1: 1229+4	70F8  47      	PERMUT	ld	b,a		; Core permutation. Rounds in A
-   2: 1233+10	70F9  21F372  	ROUND	ld	hl,S+23		; Constant in C 0xF0 or 0xB4
-   3: 1243+4	70FC  79      		ld	a,c		; Add round constant to S[2]
-   4: 1247+7	70FD  AE      		xor	a,(hl)
-   5: 1254+7	70FE  77      		ld	(hl),a
-   6: 1261+4	70FF  79      		ld	a,c
-   7: 1265+7	7100  D60F    		sub	15
-   8: 1272+4	7102  4F      		ld	c,a
+   1: 1327+4	710D  47      	PERMUT	ld	b,a		; Core permutation. Rounds in A
+   2: 1331+10	710E  219C74  	ROUND	ld	hl,S+23		; Constant in C 0xF0 or 0xB4
+   3: 1341+4	7111  79      		ld	a,c		; Add round constant to S[2]
+   4: 1345+7	7112  AE      		xor	a,(hl)
+   5: 1352+7	7113  77      		ld	(hl),a
+   6: 1359+4	7114  79      		ld	a,c
+   7: 1363+7	7115  D60F    		sub	15
+   8: 1370+4	7117  4F      		ld	c,a
    9:					;;
-  10: 1276+11	7103  C5      		push	bc
-  11: 1287+17	7104  CDA171  		call	SUBSTIT		; Substitution layer
-  12: 1304+17	7107  CD0E71  		call	LINEAR		; Linear diffusion layer
+  10: 1374+11	7118  C5      		push	bc
+  11: 1385+17	7119  CDB671  		call	SUBSTIT		; Substitution layer
+  12: 1402+17	711C  CD2371  		call	LINEAR		; Linear diffusion layer
   13:					;; 
-  14: 1321+10	710A  C1      		pop	bc
-  15: 1331+8+5	710B  10EC    		djnz	ROUND
-  16: 1339+10	710D  C9      		ret
+  14: 1419+10	711F  C1      		pop	bc
+  15: 1429+8+5	7120  10EC    		djnz	ROUND
+  16: 1437+10	7122  C9      		ret
   17:					;;
-  18: 1349+10	710E  21DC72  	LINEAR	ld	hl,S		; Linear diffusion layer
-  19: 1359+11	7111  E5      		push	hl
-  20: 1370+7	7112  0613    		ld	b,19
-  21: 1377+7	7114  0E1C    		ld	c,28
-  22: 1384+11	7116  C5      		push	bc
-  23: 1395+17	7117  CD4B71  		call	LDL
-  24: 1412+10	711A  21E472  		ld	hl,S+8
-  25: 1422+11	711D  E5      		push	hl
-  26: 1433+7	711E  063D    		ld	b,61
-  27: 1440+7	7120  0E27    		ld	c,39
-  28: 1447+11	7122  C5      		push	bc
-  29: 1458+17	7123  CD4B71  		call	LDL
-  30: 1475+10	7126  21EC72  		ld	hl,S+16
-  31: 1485+11	7129  E5      		push	hl
-  32: 1496+7	712A  0601    		ld	b,1
-  33: 1503+7	712C  0E06    		ld	c,6
-  34: 1510+11	712E  C5      		push	bc
-  35: 1521+17	712F  CD4B71  		call	LDL
-  36: 1538+10	7132  21F472  		ld	hl,S+24
-  37: 1548+11	7135  E5      		push	hl
-  38: 1559+7	7136  060A    		ld	b,10
-  39: 1566+7	7138  0E11    		ld	c,17
-  40: 1573+11	713A  C5      		push	bc
-  41: 1584+17	713B  CD4B71  		call	LDL
-  42: 1601+10	713E  21FC72  		ld	hl,S+32
-  43: 1611+11	7141  E5      		push	hl
-  44: 1622+7	7142  0607    		ld	b,7
-  45: 1629+7	7144  0E29    		ld	c,41
-  46: 1636+11	7146  C5      		push	bc
-  47: 1647+17	7147  CD4B71  		call	LDL
-  48: 1664+10	714A  C9      		ret
+  18: 1447+10	7123  218574  	LINEAR	ld	hl,S		; Linear diffusion layer
+  19: 1457+11	7126  E5      		push	hl
+  20: 1468+7	7127  0613    		ld	b,19
+  21: 1475+7	7129  0E1C    		ld	c,28
+  22: 1482+11	712B  C5      		push	bc
+  23: 1493+17	712C  CD6071  		call	LDL
+  24: 1510+10	712F  218D74  		ld	hl,S+8
+  25: 1520+11	7132  E5      		push	hl
+  26: 1531+7	7133  063D    		ld	b,61
+  27: 1538+7	7135  0E27    		ld	c,39
+  28: 1545+11	7137  C5      		push	bc
+  29: 1556+17	7138  CD6071  		call	LDL
+  30: 1573+10	713B  219574  		ld	hl,S+16
+  31: 1583+11	713E  E5      		push	hl
+  32: 1594+7	713F  0601    		ld	b,1
+  33: 1601+7	7141  0E06    		ld	c,6
+  34: 1608+11	7143  C5      		push	bc
+  35: 1619+17	7144  CD6071  		call	LDL
+  36: 1636+10	7147  219D74  		ld	hl,S+24
+  37: 1646+11	714A  E5      		push	hl
+  38: 1657+7	714B  060A    		ld	b,10
+  39: 1664+7	714D  0E11    		ld	c,17
+  40: 1671+11	714F  C5      		push	bc
+  41: 1682+17	7150  CD6071  		call	LDL
+  42: 1699+10	7153  21A574  		ld	hl,S+32
+  43: 1709+11	7156  E5      		push	hl
+  44: 1720+7	7157  0607    		ld	b,7
+  45: 1727+7	7159  0E29    		ld	c,41
+  46: 1734+11	715B  C5      		push	bc
+  47: 1745+17	715C  CD6071  		call	LDL
+  48: 1762+10	715F  C9      		ret
   49:					;; 
-  50: 1674+11	714B  E5      	LDL	push	hl		; Fill in temp vars T, T+8
-  51: 1685+10	714C  110473  		ld	de,TSTORE	; #rots sored in BC pushed on stack
-  52: 1695+7	714F  0600    		ld	b,0		; on top of HL
-  53: 1702+7	7151  0E08    		ld	c,8
-  54: 1709+16+5	7153  EDB0    		ldir
-  55: 1725+10	7155  E1      		pop	hl
-  56: 1735+10	7156  110C73  		ld	de,TSTORE+8
-  57: 1745+7	7159  0E08    		ld	c,8
-  58: 1752+16+5	715B  EDB0    		ldir
+  50: 1772+11	7160  E5      	LDL	push	hl		; Fill in temp vars T, T+8
+  51: 1783+10	7161  11AD74  		ld	de,TSTORE	; #rots sored in BC pushed on stack
+  52: 1793+7	7164  0600    		ld	b,0		; on top of HL
+  53: 1800+7	7166  0E08    		ld	c,8
+  54: 1807+16+5	7168  EDB0    		ldir
+  55: 1823+10	716A  E1      		pop	hl
+  56: 1833+10	716B  11B574  		ld	de,TSTORE+8
+  57: 1843+7	716E  0E08    		ld	c,8
+  58: 1850+16+5	7170  EDB0    		ldir
   59:					;;
-  60: 1768+14	715D  FDE1    		pop	iy		; preserve return address
-  61: 1782+10	715F  C1      		pop	bc
-  62: 1792+10	7160  210473  		ld	hl,TSTORE
-  63: 1802+11	7163  C5      	ARG1L	push	bc
-  64: 1813+17	7164  CD8E71  		call	ROTR1
-  65: 1830+10	7167  C1      		pop	bc
-  66: 1840+8+5	7168  10F9    		djnz	ARG1L
-  67: 1848+4	716A  41      		ld	b,c
-  68: 1852+10	716B  210C73  		ld	hl,TSTORE+8
-  69: 1862+11	716E  C5      	ARG2L	push	bc
-  70: 1873+17	716F  CD8E71  		call	ROTR1
-  71: 1890+10	7172  C1      		pop	bc
-  72: 1900+8+5	7173  10F9    		djnz	ARG2L
+  60: 1866+14	7172  FDE1    		pop	iy		; preserve return address
+  61: 1880+10	7174  C1      		pop	bc
+  62: 1890+10	7175  21AD74  		ld	hl,TSTORE
+  63: 1900+11	7178  C5      	ARG1L	push	bc
+  64: 1911+17	7179  CDA371  		call	ROTR1
+  65: 1928+10	717C  C1      		pop	bc
+  66: 1938+8+5	717D  10F9    		djnz	ARG1L
+  67: 1946+4	717F  41      		ld	b,c
+  68: 1950+10	7180  21B574  		ld	hl,TSTORE+8
+  69: 1960+11	7183  C5      	ARG2L	push	bc
+  70: 1971+17	7184  CDA371  		call	ROTR1
+  71: 1988+10	7187  C1      		pop	bc
+  72: 1998+8+5	7188  10F9    		djnz	ARG2L
   73:					;;
-  74: 1908+10	7175  E1      		pop	hl		; XOR S[HL] T and T+8
-  75: 1918+7	7176  0608    		ld	b,8
-  76: 1925+10	7178  110C73  		ld	de,TSTORE+8
-  77: 1935+14	717B  DD210473		ld	ix,TSTORE
-  78: 1949+7	717F  1A      	XOR3L	ld	a,(de)
-  79: 1956+19	7180  DDAE00  		xor	a,(ix)
-  80: 1975+7	7183  AE      		xor	a,(hl)
-  81: 1982+7	7184  77      		ld	(hl),a
-  82: 1989+6	7185  23      		inc	hl
-  83: 1995+10	7186  DD23    		inc	ix
-  84: 2005+6	7188  13      		inc	de
-  85: 2011+8+5	7189  10F4    		djnz	XOR3L
-  86: 2019+15	718B  FDE5    		push	iy
-  87: 2034+10	718D  C9      		ret
+  74: 2006+10	718A  E1      		pop	hl		; XOR S[HL] T and T+8
+  75: 2016+7	718B  0608    		ld	b,8
+  76: 2023+10	718D  11B574  		ld	de,TSTORE+8
+  77: 2033+14	7190  DD21AD74		ld	ix,TSTORE
+  78: 2047+7	7194  1A      	XOR3L	ld	a,(de)
+  79: 2054+19	7195  DDAE00  		xor	a,(ix)
+  80: 2073+7	7198  AE      		xor	a,(hl)
+  81: 2080+7	7199  77      		ld	(hl),a
+  82: 2087+6	719A  23      		inc	hl
+  83: 2093+10	719B  DD23    		inc	ix
+  84: 2103+6	719D  13      		inc	de
+  85: 2109+8+5	719E  10F4    		djnz	XOR3L
+  86: 2117+15	71A0  FDE5    		push	iy
+  87: 2132+10	71A2  C9      		ret
   88:					;; 
-  89: 2044+11	718E  E5      	ROTR1	push	hl		; Rot right 1b the 8B pointed by HL
-  90: 2055+15	718F  CB3E    		srl	(hl)
-  91: 2070+6	7191  23      		inc	hl
-  92: 2076+7	7192  0607    		ld	b,7		; Use B
-  93: 2083+15	7194  CB1E    	R1LOOP	rr	(hl)
-  94: 2098+6	7196  23      		inc	hl
-  95: 2104+8+5	7197  10FB    		djnz	R1LOOP
-  96: 2112+10	7199  E1      		pop	hl
-  97: 2122+7+5	719A  3004    		jr	NC,R1OUT
-  98: 2129+7	719C  3E80    		ld	a,0x80
-  99: 2136+7	719E  B6      		or	a,(hl)
- 100: 2143+7	719F  77      		ld	(hl),a
- 101: 2150+10	71A0  C9      	R1OUT	ret			; HL restored on exit
+  89: 2142+11	71A3  E5      	ROTR1	push	hl		; Rot right 1b the 8B pointed by HL
+  90: 2153+15	71A4  CB3E    		srl	(hl)
+  91: 2168+6	71A6  23      		inc	hl
+  92: 2174+7	71A7  0607    		ld	b,7		; Use B
+  93: 2181+15	71A9  CB1E    	R1LOOP	rr	(hl)
+  94: 2196+6	71AB  23      		inc	hl
+  95: 2202+8+5	71AC  10FB    		djnz	R1LOOP
+  96: 2210+10	71AE  E1      		pop	hl
+  97: 2220+7+5	71AF  3004    		jr	NC,R1OUT
+  98: 2227+7	71B1  3E80    		ld	a,0x80
+  99: 2234+7	71B3  B6      		or	a,(hl)
+ 100: 2241+7	71B4  77      		ld	(hl),a
+ 101: 2248+10	71B5  C9      	R1OUT	ret			; HL restored on exit
  102:					;; 
- 103: 2160+10	71A1  21DC72  	SUBSTIT	ld	hl,S
- 104: 2170+10	71A4  11FC72  		ld	de,S+32
- 105: 2180+17	71A7  CD1872  		call	XORSTA
- 106: 2197+10	71AA  21FC72  		ld	hl,S+32
- 107: 2207+10	71AD  11F472  		ld	de,S+24
- 108: 2217+17	71B0  CD1872  		call	XORSTA
- 109: 2234+10	71B3  21EC72  		ld	hl,S+16
- 110: 2244+10	71B6  11E472  		ld	de,S+8
- 111: 2254+17	71B9  CD1872  		call	XORSTA
- 112: 2271+14	71BC  DD210473		ld	ix,TSTORE	; Compute T
- 113: 2285+10	71C0  11DC72  		ld	de,S
- 114: 2295+10	71C3  21E472  		ld	hl,S+8
- 115: 2305+17	71C6  CD2272  		call	TSUBST
- 116: 2322+17	71C9  CD2272  		call	TSUBST
- 117: 2339+17	71CC  CD2272  		call	TSUBST
- 118: 2356+17	71CF  CD2272  		call	TSUBST
- 119: 2373+10	71D2  21DC72  		ld	hl,S
- 120: 2383+17	71D5  CD2272  		call	TSUBST
+ 103: 2258+10	71B6  218574  	SUBSTIT	ld	hl,S
+ 104: 2268+10	71B9  11A574  		ld	de,S+32
+ 105: 2278+17	71BC  CD2D72  		call	XORSTA
+ 106: 2295+10	71BF  21A574  		ld	hl,S+32
+ 107: 2305+10	71C2  119D74  		ld	de,S+24
+ 108: 2315+17	71C5  CD2D72  		call	XORSTA
+ 109: 2332+10	71C8  219574  		ld	hl,S+16
+ 110: 2342+10	71CB  118D74  		ld	de,S+8
+ 111: 2352+17	71CE  CD2D72  		call	XORSTA
+ 112: 2369+14	71D1  DD21AD74		ld	ix,TSTORE	; Compute T
+ 113: 2383+10	71D5  118574  		ld	de,S
+ 114: 2393+10	71D8  218D74  		ld	hl,S+8
+ 115: 2403+17	71DB  CD3772  		call	TSUBST
+ 116: 2420+17	71DE  CD3772  		call	TSUBST
+ 117: 2437+17	71E1  CD3772  		call	TSUBST
+ 118: 2454+17	71E4  CD3772  		call	TSUBST
+ 119: 2471+10	71E7  218574  		ld	hl,S
+ 120: 2481+17	71EA  CD3772  		call	TSUBST
  121:					;;
- 122: 2400+10	71D8  21DC72  		ld	hl,S
- 123: 2410+10	71DB  110C73  		ld	de,TSTORE+8
- 124: 2420+17	71DE  CD1872  		call	XORSTA
- 125: 2437+17	71E1  CD1872  		call	XORSTA
- 126: 2454+17	71E4  CD1872  		call	XORSTA
- 127: 2471+17	71E7  CD1872  		call	XORSTA
- 128: 2488+10	71EA  110473  		ld	de,TSTORE
- 129: 2498+17	71ED  CD1872  		call	XORSTA
+ 122: 2498+10	71ED  218574  		ld	hl,S
+ 123: 2508+10	71F0  11B574  		ld	de,TSTORE+8
+ 124: 2518+17	71F3  CD2D72  		call	XORSTA
+ 125: 2535+17	71F6  CD2D72  		call	XORSTA
+ 126: 2552+17	71F9  CD2D72  		call	XORSTA
+ 127: 2569+17	71FC  CD2D72  		call	XORSTA
+ 128: 2586+10	71FF  11AD74  		ld	de,TSTORE
+ 129: 2596+17	7202  CD2D72  		call	XORSTA
  130:					;;
- 131: 2515+10	71F0  21E472  		ld	hl,S+8
- 132: 2525+10	71F3  11DC72  		ld	de,S
- 133: 2535+17	71F6  CD1872  		call	XORSTA
- 134: 2552+10	71F9  21DC72  		ld	hl,S
- 135: 2562+10	71FC  11FC72  		ld	de,S+32
- 136: 2572+17	71FF  CD1872  		call	XORSTA
- 137: 2589+10	7202  21F472  		ld	hl,S+24
- 138: 2599+10	7205  11EC72  		ld	de,S+16
- 139: 2609+17	7208  CD1872  		call	XORSTA
- 140: 2626+7	720B  0608    		ld	b,8
- 141: 2633+10	720D  21EC72  		ld	hl,S+16
- 142: 2643+7	7210  7E      	FFLOOP	ld	a,(hl)
- 143: 2650+7	7211  EEFF    		xor	a,0xFF
- 144: 2657+7	7213  77      		ld	(hl),a
- 145: 2664+6	7214  23      		inc	hl
- 146: 2670+8+5	7215  10F9    		djnz FFLOOP
- 147: 2678+10	7217  C9      		ret
+ 131: 2613+10	7205  218D74  		ld	hl,S+8
+ 132: 2623+10	7208  118574  		ld	de,S
+ 133: 2633+17	720B  CD2D72  		call	XORSTA
+ 134: 2650+10	720E  218574  		ld	hl,S
+ 135: 2660+10	7211  11A574  		ld	de,S+32
+ 136: 2670+17	7214  CD2D72  		call	XORSTA
+ 137: 2687+10	7217  219D74  		ld	hl,S+24
+ 138: 2697+10	721A  119574  		ld	de,S+16
+ 139: 2707+17	721D  CD2D72  		call	XORSTA
+ 140: 2724+7	7220  0608    		ld	b,8
+ 141: 2731+10	7222  219574  		ld	hl,S+16
+ 142: 2741+7	7225  7E      	FFLOOP	ld	a,(hl)
+ 143: 2748+7	7226  EEFF    		xor	a,0xFF
+ 144: 2755+7	7228  77      		ld	(hl),a
+ 145: 2762+6	7229  23      		inc	hl
+ 146: 2768+8+5	722A  10F9    		djnz FFLOOP
+ 147: 2776+10	722C  C9      		ret
  148:					;; 
- 149: 2688+7	7218  0608    	XORSTA	ld	b,8		; S[hl] ^= S[de]
- 150: 2695+7	721A  1A      	XORLOOP	ld	a,(de)
- 151: 2702+7	721B  AE      		xor	a,(hl)
- 152: 2709+7	721C  77      		ld	(hl),a
- 153: 2716+6	721D  13      		inc	de
- 154: 2722+6	721E  23      		inc	hl
- 155: 2728+8+5	721F  10F9    		djnz	XORLOOP
- 156: 2736+10	7221  C9      		ret
+ 149: 2786+7	722D  0608    	XORSTA	ld	b,8		; S[hl] ^= S[de]
+ 150: 2793+7	722F  1A      	XORLOOP	ld	a,(de)
+ 151: 2800+7	7230  AE      		xor	a,(hl)
+ 152: 2807+7	7231  77      		ld	(hl),a
+ 153: 2814+6	7232  13      		inc	de
+ 154: 2820+6	7233  23      		inc	hl
+ 155: 2826+8+5	7234  10F9    		djnz	XORLOOP
+ 156: 2834+10	7236  C9      		ret
  157:					;; 
- 158: 2746+7	7222  0608    	TSUBST	ld	b,8		; T[i] = S[i]^FF & S[i+1%5]
- 159: 2753+7	7224  1A      	TSLOOP	ld	a,(de)
- 160: 2760+7	7225  EEFF    		xor	a,0xFF
- 161: 2767+7	7227  A6      		and	a,(hl)
- 162: 2774+19	7228  DD7700  		ld	(ix),a
- 163: 2793+10	722B  DD23    		inc	ix
- 164: 2803+6	722D  13      		inc	de
- 165: 2809+6	722E  23      		inc	hl
- 166: 2815+8+5	722F  10F3    		djnz	TSLOOP
- 167: 2823+10	7231  C9      		ret
+ 158: 2844+7	7237  0608    	TSUBST	ld	b,8		; T[i] = S[i]^FF & S[i+1%5]
+ 159: 2851+7	7239  1A      	TSLOOP	ld	a,(de)
+ 160: 2858+7	723A  EEFF    		xor	a,0xFF
+ 161: 2865+7	723C  A6      		and	a,(hl)
+ 162: 2872+19	723D  DD7700  		ld	(ix),a
+ 163: 2891+10	7240  DD23    		inc	ix
+ 164: 2901+6	7242  13      		inc	de
+ 165: 2907+6	7243  23      		inc	hl
+ 166: 2913+8+5	7244  10F3    		djnz	TSLOOP
+ 167: 2921+10	7246  C9      		ret
  168:					;; 
 **** ascon8.asm ****
-  41:				include ascon_data.asm
+  42:				include ascon_data.asm
 **** ascon_data.asm ****
-   1: 2833+13	7232  3A6173  	ADATA	ld	a,(ALEN)
-   2: 2846+4	7235  4F      		ld	c,a
-   3: 2850+10	7236  115173  		ld	de,ASSOC
-   4: 2860+10	7239  21DC72  	ABLOCK	ld	hl,S
-   5: 2870+7	723C  0610    		ld	b,16		; AEAD128 RATE=16 bytes
-   6: 2877+7	723E  1A      	ADATAL	ld	a,(de)
-   7: 2884+7	723F  AE      		xor	a,(hl)
-   8: 2891+7	7240  77      		ld	(hl),a
-   9: 2898+6	7241  23      		inc	hl
-  10: 2904+6	7242  13      		inc	de
-  11: 2910+8+5	7243  10F9    		djnz	ADATAL
-  12: 2918+11	7245  D5      		push	de
-  13: 2929+11	7246  C5      		push	bc
-  14: 2940+7	7247  3E08    		ld	a,8
-  15: 2947+7	7249  0EB4    		ld	c,0xB4		; Round constant init for 8
-  16: 2954+17	724B  CDF870  		call	PERMUT		; Perform A rounds
-  17: 2971+10	724E  C1      		pop	bc
-  18: 2981+4	724F  79      		ld	a,c
-  19: 2985+7	7250  D610    		sub	a,16
-  20: 2992+4	7252  4F      		ld	c,a
-  21: 2996+10	7253  D1      		pop	de
-  22: 3006+7+5	7254  20E3    		jr	NZ,ABLOCK
-  23: 3013+10	7256  21FC72  		ld	hl,S+32		; S[4] ^= 1<<63
-  24: 3023+7	7259  7E      		ld	a,(hl)
-  25: 3030+7	725A  EE80    		xor	a,0x80
-  26: 3037+7	725C  77      		ld	(hl),a
-  27: 3044+10	725D  C9      		ret
-  28:					;; 
+   1:				;; ADATA	ld	a,(ALEN)
+   2:				;; 	ld	c,a
+   3:				;; 	ld	de,ASSOC
+   4:				;; ABLOCK	ld	hl,S
+   5:				;; 	ld	b,16		; AEAD128 RATE=16 bytes
+   6:				;; ADATAL	ld	a,(de)
+   7:				;; 	xor	a,(hl)
+   8:				;; 	ld	(hl),a
+   9:				;; 	inc	hl
+  10:				;; 	inc	de
+  11:				;; 	djnz	ADATAL
+  12:				;; 	push	de
+  13:				;; 	push	bc
+  14:				;; 	ld	a,8
+  15:				;; 	ld	c,0xB4		; Round constant init for 8
+  16:				;; 	call	PERMUT		; Perform A rounds
+  17:				;; 	pop	bc
+  18:				;; 	ld	a,c
+  19:				;; 	sub	a,16
+  20:				;; 	ld	c,a
+  21:				;; 	pop	de
+  22:				;; 	jr	NZ,ABLOCK
+  23:				;; 	ld	hl,S+32		; S[4] ^= 1<<63
+  24:				;; 	ld	a,(hl)
+  25:				;; 	xor	a,0x80
+  26:				;; 	ld	(hl),a
+  27:				;; 	ret
+  28:					;;
+  29: 2931+17	7247  CD7C72  	ADFULL	call	ADPADD	
+  30: 2948+13	724A  3A0B76  		ld	a,(ALEN)
+  31: 2961+8	724D  CB3F    		srl	a
+  32: 2969+8	724F  CB3F    		srl	a
+  33: 2977+8	7251  CB3F    		srl	a
+  34: 2985+8	7253  CB3F    		srl	a
+  35: 2993+7	7255  C601    		add	a,1
+  36: 3000+4	7257  47      		ld	b,a
+  37: 3004+10	7258  110B75  		ld	de,MSTORE
+  38: 3014+11	725B  C5      	ADLOOP	push	bc
+  39: 3025+10	725C  218574  		ld	hl,S
+  40: 3035+7	725F  0610    		ld	b,16
+  41: 3042+7	7261  1A      	ADLP1	ld	a,(de)
+  42: 3049+7	7262  AE      		xor	a,(hl)
+  43: 3056+7	7263  77      		ld	(hl),a
+  44: 3063+6	7264  13      		inc	de
+  45: 3069+6	7265  23      		inc	hl
+  46: 3075+8+5	7266  10F9    		djnz 	ADLP1
+  47: 3083+11	7268  D5      		push	de
+  48: 3094+7	7269  3E08    		ld	a,8
+  49: 3101+7	726B  0EB4    		ld	c,0xB4		; Round constant init for 8
+  50: 3108+17	726D  CD0D71  		call	PERMUT		; Perform A rounds on each block
+  51: 3125+10	7270  D1      		pop	de
+  52: 3135+10	7271  C1      		pop	bc
+  53: 3145+8+5	7272  10E7    		djnz	ADLOOP
+  54: 3153+10	7274  21A574  		ld	hl,S+32		; S[4] ^= 1<<63
+  55: 3163+7	7277  7E      		ld	a,(hl)
+  56: 3170+7	7278  EE80    		xor	a,0x80
+  57: 3177+7	727A  77      		ld	(hl),a
+  58: 3184+10	727B  C9      		ret
+  59:					;; 
+  60: 3194+13	727C  3A0B76  	ADPADD	ld	a,(ALEN)	; Prepare text blocks in MSTORE
+  61: 3207+13	727F  32FA74  		ld	(PADLEN),a	; for associated data (AD)
+  62: 3220+14	7282  DD211275		ld	ix,MSTORE+7
+  63: 3234+14	7286  FD210C76		ld	iy,ADATA
+  64: 3248+8	728A  CB3F    	PADDING	srl	a
+  65: 3256+8	728C  CB3F    		srl	a
+  66: 3264+8	728E  CB3F    		srl	a
+  67: 3272+8	7290  CB3F    		srl	a
+  68: 3280+4	7292  47      		ld	b,a
+  69: 3284+4	7293  4F      		ld	c,a
+  70: 3288+7+5	7294  282C    		jr	Z,LASTB
+  71:					;; 
+  72: 3295+11	7296  C5      	B1	push	bc
+  73: 3306+7	7297  0608    		ld	b,8
+  74: 3313+19	7299  FD7E00  	B1LP1	ld	a,(iy)
+  75: 3332+19	729C  DD7700  		ld	(ix),a
+  76: 3351+10	729F  FD23    		inc	iy
+  77: 3361+10	72A1  DD2B    		dec	ix
+  78: 3371+8+5	72A3  10F4    		djnz	B1LP1
+  79: 3379+7	72A5  0600    		ld	b,0		; Necessary?
+  80: 3386+7	72A7  0E0F    		ld	c,15
+  81: 3393+15	72A9  DD09    		add	ix,bc
+  82: 3408+7	72AB  0608    		ld	b,8
+  83: 3415+19	72AD  FD7E00  	B1LP2	ld	a,(iy)
+  84: 3434+19	72B0  DD7700  		ld	(ix),a
+  85: 3453+10	72B3  FD23    		inc	iy
+  86: 3463+10	72B5  DD2B    		dec	ix
+  87: 3473+8+5	72B7  10F4    		djnz	B1LP2
+  88: 3481+7	72B9  0600    		ld	b,0		; Necessary?
+  89: 3488+7	72BB  0E0F    		ld	c,15
+  90: 3495+15	72BD  DD09    		add	ix,bc
+  91: 3510+10	72BF  C1      		pop	bc
+  92: 3520+8+5	72C0  10D4    		djnz	B1
+  93:					;;
+  94: 3528+13	72C2  3AFA74  	LASTB	ld	a,(PADLEN)
+  95: 3541+8	72C5  CB21    		sla	c
+  96: 3549+8	72C7  CB21    		sla	c
+  97: 3557+8	72C9  CB21    		sla	c
+  98: 3565+8	72CB  CB21    		sla	c
+  99: 3573+4	72CD  91      		sub	a,c
+ 100: 3577+4	72CE  47      		ld	b,a
+ 101: 3581+4	72CF  4F      		ld	c,a
+ 102: 3585+7	72D0  D608    		sub	a,8
+ 103: 3592+7+5	72D2  381B    		jr	C,LASTB1
+ 104: 3599+4	72D4  4F      		ld	c,a		; B = len
+ 105: 3603+11	72D5  C5      		push	bc		; C = len - 8 >= 0
+ 106: 3614+7	72D6  0608    		ld	b,8		
+ 107: 3621+19	72D8  FD7E00  	LASTL1	ld	a,(iy)		
+ 108: 3640+19	72DB  DD7700  		ld	(ix),a
+ 109: 3659+10	72DE  FD23    		inc	iy
+ 110: 3669+10	72E0  DD2B    		dec	ix
+ 111: 3679+8+5	72E2  10F4    		djnz	LASTL1
+ 112: 3687+7	72E4  0600    		ld	b,0
+ 113: 3694+7	72E6  0E10    		ld	c,16
+ 114: 3701+15	72E8  DD09    		add	ix,bc
+ 115: 3716+10	72EA  C1      		pop	bc
+ 116: 3726+17	72EB  CD0473  		call	FILLMIX
+ 117: 3743+10	72EE  C9      		ret
+ 118:					;;
+ 119: 3753+17	72EF  CD0473  	LASTB1	call	FILLMIX		; B = C = len < 8
+ 120: 3770+7	72F2  0600    		ld	b,0
+ 121: 3777+7	72F4  0E10    		ld	c,16
+ 122: 3784+15	72F6  DD09    		add	ix,bc
+ 123: 3799+7	72F8  0608    		ld	b,8
+ 124: 3806+7	72FA  3E00    		ld	a,0
+ 125: 3813+19	72FC  DD7700  	FILP4	ld	(ix),a
+ 126: 3832+10	72FF  DD2B    		dec	ix
+ 127: 3842+8+5	7301  10F9    		djnz	FILP4
+ 128: 3850+10	7303  C9      		ret
+ 129:					;; 
+ 130: 3860+7	7304  3E00    	FILLMIX	ld	a,0		; B = len
+ 131: 3867+4	7306  81      		add	a,c		; C = 8 - len >= 0
+ 132: 3871+7+5	7307  2829    		jr	Z,FILLB2
+ 133: 3878+4	7309  41      		ld	b,c
+ 134: 3882+19	730A  FD7E00  	FILP1	ld	a,(iy)
+ 135: 3901+19	730D  DD7700  		ld	(ix),a
+ 136: 3920+10	7310  FD23    		inc	iy
+ 137: 3930+10	7312  DD2B    		dec	ix
+ 138: 3940+8+5	7314  10F4    		djnz	FILP1
+ 139: 3948+7	7316  3E08    		ld	a,8
+ 140: 3955+4	7318  91      		sub	a,c
+ 141: 3959+7+5	7319  2816    		jr	Z,FILLOUT
+ 142: 3966+7	731B  3E01    		ld	a,1
+ 143: 3973+19	731D  DD7700  		ld	(ix),a
+ 144: 3992+10	7320  DD2B    		dec	ix
+ 145: 4002+7	7322  3E07    		ld	a,7
+ 146: 4009+4	7324  91      		sub	a,c
+ 147: 4013+7+5	7325  280A    		jr	Z,FILLOUT
+ 148: 4020+4	7327  47      		ld	b,a
+ 149: 4024+7	7328  3E00    		ld	a,0
+ 150: 4031+19	732A  DD7700  	FILP2	ld	(ix),a
+ 151: 4050+10	732D  DD2B    		dec	ix
+ 152: 4060+8+5	732F  10F9    		djnz	FILP2
+ 153: 4068+10	7331  C9      	FILLOUT	ret
+ 154:					;; 
+ 155: 4078+7	7332  3E01    	FILLB2	ld	a,1
+ 156: 4085+19	7334  DD7700  		ld	(ix),a
+ 157: 4104+10	7337  DD2B    		dec	ix
+ 158: 4114+7	7339  0607    		ld	b,7
+ 159: 4121+7	733B  3E00    		ld	a,0
+ 160: 4128+19	733D  DD7700  	FILP3	ld	(ix),a
+ 161: 4147+10	7340  DD2B    		dec	ix
+ 162: 4157+8+5	7342  10F9    		djnz	FILP3
+ 163: 4165+10	7344  C9      		ret
+ 164:					
 **** ascon8.asm ****
-  42:				include ascon_plain.asm	
+  43:				include ascon_plain.asm	
 **** ascon_plain.asm ****
-   1: 3054+10	725E  116273  	PLTEXT	ld	de,PLAIN	; Assuming plaintext length < 16B
-   2: 3064+10	7261  21DC72  		ld	hl,S
-   3: 3074+7	7264  0610    		ld	b,16		; Process last (only here) block
-   4: 3081+7	7266  1A      	PLTLP	ld	a,(de)
-   5: 3088+7	7267  AE      		xor	a,(hl)
-   6: 3095+7	7268  77      		ld	(hl),a
-   7: 3102+6	7269  13      		inc	de
-   8: 3108+6	726A  23      		inc	hl
-   9: 3114+8+5	726B  10F9    		djnz	PLTLP
-  10: 3122+13	726D  3A7273  		ld	a,(PLEN)	; Assumes PLEN < 8
-  11: 3135+4	7270  47      		ld	b,a
-  12: 3139+10	7271  217373  		ld	hl,CIPHER
-  13: 3149+10	7274  11E372  		ld	de,S+7
-  14: 3159+7	7277  1A      	CITLP	ld	a,(de)
-  15: 3166+7	7278  77      		ld	(hl),a
-  16: 3173+4	7279  78      		ld	a,b
-  17: 3177+7	727A  D601    		sub	a,1
-  18: 3184+4	727C  47      		ld	b,a
-  19: 3188+6	727D  23      		inc	hl
-  20: 3194+6	727E  1B      		dec	de
-  21: 3200+7+5	727F  20F6    		jr	NZ,CITLP
-  22: 3207+10	7281  C9      		ret
-  23:					;; 
+   1: 4175+17	7345  CDF673  	PLTEXT	call	PTPADD		; Padding
+   2: 4192+17	7348  CD0874  		call	CLRCIPH
+   3: 4209+13	734B  3A1176  		ld	a,(PLEN)
+   4: 4222+8	734E  CB3F    		srl	a
+   5: 4230+8	7350  CB3F    		srl	a
+   6: 4238+8	7352  CB3F    		srl	a
+   7: 4246+8	7354  CB3F    		srl	a
+   8: 4254+4	7356  4F      		ld	c,a		; Preserve len // 16
+   9: 4258+7	7357  C601    		add	a,1
+  10: 4265+4	7359  47      		ld	b,a
+  11: 4269+10	735A  110B75  		ld	de,MSTORE
+  12: 4279+14	735D  DD211776		ld	ix,CIPHER
+  13: 4293+11	7361  C5      	PTLOOP	push	bc		; Mix block
+  14: 4304+10	7362  218574  		ld	hl,S
+  15: 4314+7	7365  0610    		ld	b,16
+  16: 4321+7	7367  1A      	PTLP1	ld	a,(de)
+  17: 4328+7	7368  AE      		xor	a,(hl)
+  18: 4335+7	7369  77      		ld	(hl),a
+  19: 4342+6	736A  23      		inc	hl
+  20: 4348+6	736B  13      		inc	de
+  21: 4354+8+5	736C  10F9    		djnz	PTLP1
+  22: 4362+10	736E  C1      		pop	bc
+  23: 4372+4	736F  78      		ld	a,b
+  24: 4376+7	7370  D601    		sub	a,1
+  25: 4383+7+5	7372  282E    		jr	Z,PTLAST	; Handle last block
+  26: 4390+11	7374  C5      		push	bc		; Handle n-1 blocks
+  27: 4401+10	7375  218C74  		ld	hl,S+7		; Append to cipher
+  28: 4411+7	7378  0608    		ld	b,8
+  29: 4418+7	737A  7E      	PTLP2	ld	a,(hl)
+  30: 4425+19	737B  DD7700  		ld	(ix),a
+  31: 4444+6	737E  2B      		dec	hl
+  32: 4450+10	737F  DD23    		inc	ix
+  33: 4460+8+5	7381  10F7    		djnz	PTLP2
+  34: 4468+10	7383  219474  		ld	hl,S+15
+  35: 4478+7	7386  0608    		ld	b,8
+  36: 4485+7	7388  7E      	PTLP30	ld	a,(hl)
+  37: 4492+19	7389  DD7700  		ld	(ix),a
+  38: 4511+6	738C  2B      		dec	hl
+  39: 4517+10	738D  DD23    		inc	ix
+  40: 4527+8+5	738F  10F7    		djnz	PTLP30
+  41: 4535+15	7391  DDE5    		push	ix
+  42: 4550+11	7393  D5      		push	de
+  43: 4561+7	7394  3E08    		ld	a,8
+  44: 4568+7	7396  0EB4    		ld	c,0xB4		; Round constant init for 8
+  45: 4575+17	7398  CD0D71  		call	PERMUT		; Perform A rounds on each block
+  46: 4592+10	739B  D1      		pop	de
+  47: 4602+14	739C  DDE1    		pop	ix
+  48: 4616+10	739E  C1      	PTNEXT	pop	bc
+  49: 4626+8+5	739F  10C0    		djnz	PTLOOP
+  50: 4634+10	73A1  C9      		ret
+  51:					;; 
+  52: 4644+11	73A2  C5      	PTLAST	push	bc
+  53: 4655+13	73A3  3A1176  		ld	a,(PLEN)
+  54: 4668+8	73A6  CB21    		sla	c
+  55: 4676+8	73A8  CB21    		sla	c
+  56: 4684+8	73AA  CB21    		sla	c
+  57: 4692+8	73AC  CB21    		sla	c
+  58: 4700+4	73AE  91      		sub	a,c
+  59: 4704+4	73AF  47      		ld	b,a
+  60: 4708+4	73B0  4F      		ld	c,a
+  61:					;; ld	a,b
+  62: 4712+7	73B1  D608    		sub	a,8
+  63: 4719+7+5	73B3  3816    		jr	C,LOWRES	; residual < 8
+  64: 4726+10	73B5  218C74  		ld	hl,S+7		; residual >= 8
+  65: 4736+7	73B8  0608    		ld 	b,8
+  66: 4743+7	73BA  7E      	PTLP3	ld	a,(hl)
+  67: 4750+19	73BB  DD7700  		ld	(ix),a
+  68: 4769+6	73BE  2B      		dec	hl
+  69: 4775+10	73BF  DD23    		inc	ix
+  70: 4785+8+5	73C1  10F7    		djnz	PTLP3
+  71: 4793+10	73C3  219474  		ld	hl,S+15
+  72: 4803+17	73C6  CDDE73  		call	PTRES
+  73: 4820+12	73C9  18D3    		jr	PTNEXT
+  74:					;;
+  75: 4832+10	73CB  218C74  	LOWRES	ld	hl,S+7	
+  76: 4842+17	73CE  CDDE73  		call	PTRES
+  77: 4859+7	73D1  0608    		ld	b,8		; Unnecessary if CLRed
+  78: 4866+7	73D3  3E00    		ld	a,0
+  79: 4873+19	73D5  DD7700  	PTLP4	ld	(ix),a
+  80: 4892+10	73D8  DD23    		inc	ix
+  81: 4902+8+5	73DA  10F9    		djnz	PTLP4
+  82: 4910+12	73DC  18C0    		jr	PTNEXT
+  83:					;;
+  84: 4922+4	73DE  41      	PTRES	ld	b,c
+  85: 4926+7	73DF  7E      	PTLP5	ld	a,(hl)
+  86: 4933+19	73E0  DD7700  		ld	(ix),a
+  87: 4952+6	73E3  2B      		dec	hl
+  88: 4958+10	73E4  DD23    		inc	ix
+  89: 4968+8+5	73E6  10F7    		djnz	PTLP5
+  90: 4976+7	73E8  3E08    		ld	a,8
+  91: 4983+4	73EA  91      		sub	a,c
+  92: 4987+4	73EB  47      		ld	b,a
+  93: 4991+7	73EC  3E00    		ld	a,0
+  94: 4998+19	73EE  DD7700  	PTLP6	ld	(ix),a
+  95: 5017+10	73F1  DD23    		inc	ix
+  96: 5027+8+5	73F3  10F9    		djnz	PTLP6
+  97: 5035+10	73F5  C9      		ret
+  98:					;; 
+  99: 5045+13	73F6  3A1176  	PTPADD	ld	a,(PLEN)	; Prepare text blocks in MSTORE
+ 100: 5058+13	73F9  32FA74  		ld	(PADLEN),a	; for plain text
+ 101: 5071+14	73FC  DD211275		ld	ix,MSTORE+7
+ 102: 5085+14	7400  FD211276		ld	iy,PLAIN
+ 103: 5099+17	7404  CD8A72  		call	PADDING
+ 104: 5116+10	7407  C9      		ret
+ 105:					;;
+ 106: 5126+10	7408  211776  	CLRCIPH	ld	hl,CIPHER	
+ 107: 5136+7	740B  3E00    		ld	a,0
+ 108: 5143+7	740D  0610    		ld	b,16		; Fixed length of cipher
+ 109: 5150+7	740F  77      	CLRLP	ld	(hl),a
+ 110: 5157+6	7410  23      		inc	hl
+ 111: 5163+8+5	7411  10FC    		djnz	CLRLP
+ 112: 5171+10	7413  C9      		ret
+ 113:					;; 
+ 114:				;; PLTEXT	ld	de,PLAIN	; Assuming plaintext length < 16B
+ 115:				;; 	ld	hl,S
+ 116:				;; 	ld	b,16		; Process last (only here) block
+ 117:				;; PLTLP	ld	a,(de)
+ 118:				;; 	xor	a,(hl)
+ 119:				;; 	ld	(hl),a
+ 120:				;; 	inc	de
+ 121:				;; 	inc	hl
+ 122:				;; 	djnz	PLTLP
+ 123:				;; 	ld	a,(PLEN)	; Assumes PLEN < 8
+ 124:				;; 	ld	b,a
+ 125:				;; 	ld	hl,CIPHER
+ 126:				;; 	ld	de,S+7
+ 127:				;; CITLP	ld	a,(de)
+ 128:				;; 	ld	(hl),a
+ 129:				;; 	ld	a,b
+ 130:				;; 	sub	a,1
+ 131:				;; 	ld	b,a
+ 132:				;; 	inc	hl
+ 133:				;; 	dec	de
+ 134:				;; 	jr	NZ,CITLP
+ 135:				;; 	ret
+ 136:				;; 	;; 
 **** ascon8.asm ****
-  43:				include ascon_final.asm
+  44:				include ascon_final.asm
 **** ascon_final.asm ****
-   1: 3217+10	7282  21EC72  	FINALZ	ld	hl,S+16		; Finalization
-   2: 3227+10	7285  113073  		ld	de,KEY		; Update S[2], S[3]
-   3: 3237+7	7288  0610    		ld	b,16
-   4: 3244+17	728A  CDC972  		call	FINLP
+   1: 5181+10	7414  219574  	FINALZ	ld	hl,S+16		; Finalization
+   2: 5191+10	7417  11D974  		ld	de,KEY		; Update S[2], S[3]
+   3: 5201+7	741A  0610    		ld	b,16
+   4: 5208+17	741C  CD5B74  		call	FINLP
    5:					;;
-   6: 3261+7	728D  3E0C    		ld	a,12		; 12-round permutation
-   7: 3268+7	728F  0EF0    		ld	c,0xF0
-   8: 3275+17	7291  CDF870  		call	PERMUT
+   6: 5225+7	741F  3E0C    		ld	a,12		; 12-round permutation
+   7: 5232+7	7421  0EF0    		ld	c,0xF0
+   8: 5239+17	7423  CD0D71  		call	PERMUT
    9:					;;
-  10: 3292+10	7294  21F472  		ld	hl,S+24
-  11: 3302+10	7297  113873  		ld	de,KEY+8
-  12: 3312+7	729A  0608    		ld	b,8
-  13: 3319+17	729C  CDC972  		call 	FINLP
-  14: 3336+10	729F  113073  		ld	de,KEY
-  15: 3346+7	72A2  0608    		ld	b,8
-  16: 3353+17	72A4  CDC972  		call	FINLP
+  10: 5256+10	7426  219D74  		ld	hl,S+24
+  11: 5266+10	7429  11E174  		ld	de,KEY+8
+  12: 5276+7	742C  0608    		ld	b,8
+  13: 5283+17	742E  CD5B74  		call 	FINLP
+  14: 5300+10	7431  11D974  		ld	de,KEY
+  15: 5310+7	7434  0608    		ld	b,8
+  16: 5317+17	7436  CD5B74  		call	FINLP
   17:					;;
-  18: 3370+10	72A7  218373  		ld	hl,TAG
-  19: 3380+10	72AA  11FB72  		ld	de,S+31
-  20: 3390+7	72AD  0608    		ld	b,8
-  21: 3397+7	72AF  1A      	TAGLP1	ld	a,(de)
-  22: 3404+7	72B0  77      		ld	(hl),a
-  23: 3411+6	72B1  1B      		dec	de
-  24: 3417+6	72B2  23      		inc	hl
-  25: 3423+4	72B3  78      		ld	a,b
-  26: 3427+7	72B4  D601    		sub	a,1
-  27: 3434+4	72B6  47      		ld	b,a
-  28: 3438+7+5	72B7  20F6    		jr	NZ,TAGLP1
-  29: 3445+10	72B9  110373  		ld	de,S+39
-  30: 3455+7	72BC  0608    		ld	b,8
-  31: 3462+7	72BE  1A      	TAGLP2	ld	a,(de)
-  32: 3469+7	72BF  77      		ld	(hl),a
-  33: 3476+6	72C0  1B      		dec	de
-  34: 3482+6	72C1  23      		inc	hl
-  35: 3488+4	72C2  78      		ld	a,b
-  36: 3492+7	72C3  D601    		sub	a,1
-  37: 3499+4	72C5  47      		ld	b,a
-  38: 3503+7+5	72C6  20F6    		jr	NZ,TAGLP2
-  39: 3510+10	72C8  C9      		ret
+  18: 5334+10	7439  21FB74  		ld	hl,TAG
+  19: 5344+10	743C  11A474  		ld	de,S+31
+  20: 5354+7	743F  0608    		ld	b,8
+  21: 5361+7	7441  1A      	TAGLP1	ld	a,(de)
+  22: 5368+7	7442  77      		ld	(hl),a
+  23: 5375+6	7443  1B      		dec	de
+  24: 5381+6	7444  23      		inc	hl
+  25: 5387+4	7445  78      		ld	a,b
+  26: 5391+7	7446  D601    		sub	a,1
+  27: 5398+4	7448  47      		ld	b,a
+  28: 5402+7+5	7449  20F6    		jr	NZ,TAGLP1
+  29: 5409+10	744B  11AC74  		ld	de,S+39
+  30: 5419+7	744E  0608    		ld	b,8
+  31: 5426+7	7450  1A      	TAGLP2	ld	a,(de)
+  32: 5433+7	7451  77      		ld	(hl),a
+  33: 5440+6	7452  1B      		dec	de
+  34: 5446+6	7453  23      		inc	hl
+  35: 5452+4	7454  78      		ld	a,b
+  36: 5456+7	7455  D601    		sub	a,1
+  37: 5463+4	7457  47      		ld	b,a
+  38: 5467+7+5	7458  20F6    		jr	NZ,TAGLP2
+  39: 5474+10	745A  C9      		ret
   40:					;;
-  41: 3520+7	72C9  1A      	FINLP	ld	a,(de)	
-  42: 3527+7	72CA  AE      		xor	a,(hl)
-  43: 3534+7	72CB  77      		ld	(hl),a
-  44: 3541+6	72CC  23      		inc	hl
-  45: 3547+6	72CD  13      		inc	de
-  46: 3553+8+5	72CE  10F9    		djnz	FINLP
-  47: 3561+10	72D0  C9      		ret
+  41: 5484+7	745B  1A      	FINLP	ld	a,(de)	
+  42: 5491+7	745C  AE      		xor	a,(hl)
+  43: 5498+7	745D  77      		ld	(hl),a
+  44: 5505+6	745E  23      		inc	hl
+  45: 5511+6	745F  13      		inc	de
+  46: 5517+8+5	7460  10F9    		djnz	FINLP
+  47: 5525+10	7462  C9      		ret
 **** ascon8.asm ****
-  44:					;; 
-  45:     -	72D1  4153434F	MSG	defb	'ASCON Z80',0x0D,0
+  45:					;; 
+  46:     -	7463  43495048	STR1	defb	'CIPHER:',0x0D,0
+	              45523A0D
+	              00
+  47:     -	746C  53544154	STR2	defb	'STATE:',0x0D,0
+	              453A0D00
+  48:     -	7474  5441473A	STR3	defb	'TAG:',0x0D,0
+	              0D00
+  49:     -	747A  4153434F	MSG	defb	'ASCON Z80',0x0D,0
 	              4E205A38
 	              300D00
-  46:     -	72DC ..7303 00	S	dc	40,0x0		; 5 64-bit integers
-  47:     -	7304 ..732B 00	TSTORE	dc	40,0x0		; 5 64-bit integers temp
-  48:     -	732C  80      	KLEN	defb	16*8		; Key size in bits
-  49:     -	732D  10      	RATE	defb	16		; In bytes
-  50:     -	732E  0C      	AROUND	defb	12
-  51:     -	732F  08      	BROUND	defb	8
-  52:     -	7330          	KEY	defs	16		; Key 128 bits
-  53:     -	7340          	NONCE	defs	16		; Nonce 128 bits
-  54:     -	7350  01      	VERS	defb	1
-  55:					;; Associated data, padded to a multiple of RATE bytes
-  56:     -	7351  0000014E	ASSOC	defb	0,0,1,'NOCSA',0,0,0,0,0,0,0,0
-	              4F435341
-	              00000000
-	              00000000
-  57:     -	7361  10      	ALEN	defb	16
-  58:					;; Plain text (8b max for now) same convention
-  59:     -	7362  0000016E	PLAIN	defb	0,0,1,'nocsa',0,0,0,0,0,0,0,0	
-	              6F637361
-	              00000000
-	              00000000
-  60:     -	7372  05      	PLEN	defb	5
-  61:     -	7373 ..7382 00	CIPHER	dc	16,0x0
-  62:     -	7383 ..7392 00	TAG	dc	16,0x0
-  63:					;;
-  64:     -	7000          		end START		; Use ASCON<SPACE> to SYSTEM-load
+  50:     -	7485 ..74AC 00	S	dc	40,0x0		; 5 64-bit integers
+  51:     -	74AD ..74D4 00	TSTORE	dc	40,0x0		; 5 64-bit integers temp
+  52:     -	74D5  80      	KLEN	defb	16*8		; Key size in bits
+  53:     -	74D6  10      	RATE	defb	16		; In bytes
+  54:     -	74D7  0C      	AROUND	defb	12
+  55:     -	74D8  08      	BROUND	defb	8
+  56:     -	74D9          	KEY	defs	16		; Key 128 bits
+  57:     -	74E9          	NONCE	defs	16		; Nonce 128 bits
+  58:     -	74F9  01      	VERS	defb	1
+  59:     -	74FA  00      	PADLEN	defb	0		; Temp variable for padding
+  60:     -	74FB ..750A 00	TAG	dc	16,0x0
+  61:     -	750B ..760A 00	MSTORE	dc	256,0x0		; AD, Plain, Cipher store 256B
+  62:					;; Associated data, padded to a multiple of RATE bytes
+  63:				;; ASSOC	defb	0,0,1,'NOCSA',0,0,0,0,0,0,0,0
+  64:     -	760B  05      	ALEN	defb	5
+  65:     -	760C  4153434F	ADATA	defb	'ASCON'
+	              4E
+  66:					;; Plain text (8b max for now) same convention
+  67:     -	7611  05      	PLEN	defb	5
+  68:				;; PLAIN	defb	0,0,1,'nocsa',0,0,0,0,0,0,0,0	
+  69:     -	7612  6173636F	PLAIN	defb	'ascon'
+	              6E
+  70:     -	7617 ..7626 00	CIPHER	dc	16,0x0
+  71:					;;
+  72:     -	7000          		end ENCRYPT		; Use ASCON<SPACE> to SYSTEM-load
 
 
 
@@ -460,66 +724,99 @@ Statistics:
 
      4	passes
      0	jr promotions
-    56	symbols
-   883	bytes
+    89	symbols
+  1543	bytes
 
 
 
 Symbol Table:
 
-ABLOCK          7239      29241
-ADATA           7232      29234
-ADATAL          723E      29246
-ALEN            7361      29537
-ARG1L           7163      29027
-ARG2L           716E      29038
-AROUND          732E      29486
-ASSOC           7351      29521
-BROUND          732F      29487
-CIPHER          7373      29555
-CITLP           7277      29303
-CONV8           709B      28827
-FFLOOP          7210      29200
-FINALZ          7282      29314
-FINLP           72C9      29385
-INITV           70A5      28837
-KEY             7330      29488
-KLEN            732C      29484
-LDL             714B      29003
-LINEAR          710E      28942
-MSG             72D1      29393
-NONCE           7340      29504
-OUTCIT          7050      28752
-OUTH8           708E      28814
-OUTHEX          7080      28800
-OUTLN           7068      28776
-OUTSTA          7055      28757
-OUTTAG          704B      28747
-OUTW            706A      28778
-PADKN           70D3      28883
-PERMUT          70F8      28920
-PLAIN           7362      29538
-PLEN            7372      29554
-PLTEXT          725E      29278
-PLTLP           7266      29286
-POSTINI         70E8      28904
-POSTL           70F0      28912
-R1LOOP          7194      29076
-R1OUT           71A0      29088
-RATE            732D      29485
-ROTR1           718E      29070
-ROUND           70F9      28921
-S               72DC      29404
-SHCUT           7061      28769
-START           7000      28672
-SUBSTIT         71A1      29089
-TAG             7383      29571
-TAGLP1          72AF      29359
-TAGLP2          72BE      29374
-TSLOOP          7224      29220
-TSTORE          7304      29444
-TSUBST          7222      29218
-VERS            7350      29520
-XOR3L           717F      29055
-XORLOOP         721A      29210
-XORSTA          7218      29208
+ADATA           760C      30220
+ADFULL          7247      29255
+ADLOOP          725B      29275
+ADLP1           7261      29281
+ADPADD          727C      29308
+ALEN            760B      30219
+ARG1L           7178      29048
+ARG2L           7183      29059
+AROUND          74D7      29911
+B1              7296      29334
+B1LP1           7299      29337
+B1LP2           72AD      29357
+BROUND          74D8      29912
+CIPHER          7617      30231
+CLRCIPH         7408      29704
+CLRLP           740F      29711
+CONV8           70B0      28848
+ENCRYPT         7000      28672
+FFLOOP          7225      29221
+FILLB2          7332      29490
+FILLMIX         7304      29444
+FILLOUT         7331      29489
+FILP1           730A      29450
+FILP2           732A      29482
+FILP3           733D      29501
+FILP4           72FC      29436
+FINALZ          7414      29716
+FINLP           745B      29787
+INITV           70BA      28858
+KEY             74D9      29913
+KLEN            74D5      29909
+LASTB           72C2      29378
+LASTB1          72EF      29423
+LASTL1          72D8      29400
+LDL             7160      29024
+LINEAR          7123      28963
+LOWRES          73CB      29643
+MSG             747A      29818
+MSTORE          750B      29963
+NONCE           74E9      29929
+OUTCIT          7059      28761
+OUTH8           70A3      28835
+OUTHEX          7095      28821
+OUTLN           707D      28797
+OUTSTA          7064      28772
+OUTTAG          704E      28750
+OUTW            707F      28799
+PADDING         728A      29322
+PADKN           70E8      28904
+PADLEN          74FA      29946
+PERMUT          710D      28941
+PLAIN           7612      30226
+PLEN            7611      30225
+PLTEXT          7345      29509
+POSTINI         70FD      28925
+POSTL           7105      28933
+PTLAST          73A2      29602
+PTLOOP          7361      29537
+PTLP1           7367      29543
+PTLP2           737A      29562
+PTLP3           73BA      29626
+PTLP30          7388      29576
+PTLP4           73D5      29653
+PTLP5           73DF      29663
+PTLP6           73EE      29678
+PTNEXT          739E      29598
+PTPADD          73F6      29686
+PTRES           73DE      29662
+R1LOOP          71A9      29097
+R1OUT           71B5      29109
+RATE            74D6      29910
+ROTR1           71A3      29091
+ROUND           710E      28942
+S               7485      29829
+SHCUT           7076      28790
+STR1            7463      29795
+STR2            746C      29804
+STR3            7474      29812
+SUBSTIT         71B6      29110
+TAG             74FB      29947
+TAGLP1          7441      29761
+TAGLP2          7450      29776
+TSLOOP          7239      29241
+TSTORE          74AD      29869
+TSUBST          7237      29239
+VERS            74F9      29945
+XOR3L           7194      29076
+XORLOOP         722F      29231
+XORSTA          722D      29229
